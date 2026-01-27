@@ -98,7 +98,7 @@ services:
     volumes: [n8n_data:/home/node/.n8n]
     networks:
       haus-netzwerk:
-      ipv4_address: 172.20.0.30
+        ipv4_address: 172.20.0.30
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
       interval: 30s
@@ -135,33 +135,49 @@ services:
 
   zimmer-11-dashboard-zentrale:
     build:
-      context: .
-      dockerfile: infrastructure/docker/Dockerfile.frontend
+      context: ./services/zimmer-11-dashboard
+      dockerfile: Dockerfile
     container_name: Zimmer-11-Dashboard-Zentrale
-    ports: ["3001:3000"]
     environment:
-      NEXT_PUBLIC_API_URL: http://192.168.178.21:8080
+      NODE_ENV: production
+      API_URL: http://zimmer-13-api-koordinator:8000
+    ports: ["3001:80"]
+    depends_on:
+      zimmer-13-api-koordinator: { condition: service_healthy }
     networks:
       haus-netzwerk:
         ipv4_address: 172.20.0.40
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 3000 || exit 1"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
       retries: 3
 
   zimmer-04-opencode-sekretaer:
     build:
-      context: .
-      dockerfile: infrastructure/docker/Dockerfile.frontend
+      context: ./services/zimmer-04-opencode
+      dockerfile: Dockerfile
     container_name: Zimmer-04-OpenCode-Sekretaer
-    ports: ["3002:3000"]
     environment:
-      WORKSPACE_PATH: /app
-    volumes: [.:/app]
+      NODE_ENV: production
+      PORT: 9000
+      DATABASE_URL: postgresql://ceo_admin:secure_ceo_password_2026@zimmer-archiv-postgres:5432/sin_solver_production
+      REDIS_URL: redis://zimmer-speicher-redis:6379
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      API_COORDINATOR_URL: http://zimmer-13-api-koordinator:8000
+    ports: ["3002:9000"]
+    depends_on:
+      zimmer-archiv-postgres: { condition: service_healthy }
+      zimmer-speicher-redis: { condition: service_healthy }
     networks:
       haus-netzwerk:
         ipv4_address: 172.20.0.41
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ==========================================
   # EBENE 1: AGENTS & WORKERS
@@ -216,76 +232,180 @@ services:
 
   zimmer-14-worker-arbeiter:
     build:
-      context: .
-      dockerfile: infrastructure/docker/Dockerfile.worker
-    command: python app/core/CEO_STEEL_MASTER_WORKER.py
+      context: ./services/zimmer-14-worker
+      dockerfile: Dockerfile
     restart: always
     environment:
-      ROLE: worker
-      PYTHONPATH: .
-      STEEL_CDP_URL: ws://172.20.0.20:3000/
-      ORCHESTRATOR_URL: http://172.20.0.31:8000
-      CONCURRENT_MISSIONS: 3
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://ceo_admin:secure_ceo_password_2026@zimmer-archiv-postgres:5432/sin_solver_production
+      REDIS_URL: redis://zimmer-speicher-redis:6379
+      API_COORDINATOR_URL: http://zimmer-13-api-koordinator:8000
+      STEEL_CDP_URL: ws://zimmer-05-steel-tarnkappe:3000/
+      CONCURRENT_TASKS: 3
+    depends_on:
+      zimmer-archiv-postgres: { condition: service_healthy }
+      zimmer-speicher-redis: { condition: service_healthy }
     networks: [haus-netzwerk]
     deploy:
       replicas: 5
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   zimmer-02-chronos-stratege:
     build:
-      context: .
-      dockerfile: infrastructure/docker/Dockerfile.api
+      context: ./services/zimmer-02-chronos
+      dockerfile: Dockerfile
     container_name: Zimmer-02-Chronos-Stratege
-    command: python app/main.py
     environment:
-      PYTHONPATH: .
-      ROLE: analyzer
-      STEEL_CDP_URL: ws://172.20.0.20:3000/
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://ceo_admin:secure_ceo_password_2026@zimmer-archiv-postgres:5432/sin_solver_production
+      API_BRAIN_URL: http://zimmer-13-api-koordinator:8000
+    ports: ["3001:3001"]
+    depends_on:
+      zimmer-archiv-postgres: { condition: service_healthy }
+      zimmer-13-api-koordinator: { condition: service_healthy }
     networks:
       haus-netzwerk:
         ipv4_address: 172.20.0.52
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   zimmer-09-clawdbot-bote:
     build:
-      context: .
-      dockerfile: infrastructure/docker/Dockerfile.worker
+      context: ./services/zimmer-09-clawdbot
+      dockerfile: Dockerfile
     container_name: Zimmer-09-ClawdBot-Bote
-    command: python app/core/CEO_STEEL_MASTER_WORKER.py
-    ports: ["8004:8000"]
     environment:
-      ROLE: messenger
-      PYTHONPATH: .
-      STEEL_CDP_URL: ws://172.20.0.20:3000/
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://ceo_admin:secure_ceo_password_2026@zimmer-archiv-postgres:5432/sin_solver_production
+      REDIS_URL: redis://zimmer-speicher-redis:6379
+      API_COORDINATOR_URL: http://zimmer-13-api-koordinator:8000
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+    ports: ["8004:8080"]
+    depends_on:
+      zimmer-archiv-postgres: { condition: service_healthy }
+      zimmer-speicher-redis: { condition: service_healthy }
     networks:
       haus-netzwerk:
         ipv4_address: 172.20.0.55
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Zimmer 08: QA-Prüfer (QA-Logic)
+  # Zimmer 08: QA-Prüfer (Automated Testing & Quality Assurance)
   zimmer-08-qa-pruefer:
-    image: python:3.11-slim
+    build:
+      context: ./services/zimmer-08-qa
+      dockerfile: Dockerfile
     container_name: Zimmer-08-QA-Pruefer
-    command: ["tail", "-f", "/dev/null"]
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://ceo_admin:secure_ceo_password_2026@zimmer-archiv-postgres:5432/sin_solver_production
+      REDIS_URL: redis://zimmer-speicher-redis:6379
+      API_COORDINATOR_URL: http://zimmer-13-api-koordinator:8000
+    ports: ["8005:8080"]
+    depends_on:
+      zimmer-archiv-postgres: { condition: service_healthy }
+      zimmer-speicher-redis: { condition: service_healthy }
     networks:
       haus-netzwerk:
         ipv4_address: 172.20.0.56
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Zimmer 17: SIN-Plugins (Singularity Plugins MCP)
   zimmer-17-sin-plugins:
     build:
-      context: ./infrastructure/zimmer-17-plugins
-      dockerfile: ../docker/Dockerfile.singularity-plugins
+      context: ./services/zimmer-17-mcp
+      dockerfile: Dockerfile
     container_name: Zimmer-17-SIN-Plugins
+    environment:
+      NODE_ENV: production
+      PORT: 8000
+      DATABASE_URL: postgresql://ceo_admin:secure_ceo_password_2026@zimmer-archiv-postgres:5432/sin_solver_production
+      REDIS_URL: redis://zimmer-speicher-redis:6379
+      API_COORDINATOR_URL: http://zimmer-13-api-koordinator:8000
     ports: ["8006:8000"]
+    depends_on:
+      zimmer-archiv-postgres: { condition: service_healthy }
+      zimmer-speicher-redis: { condition: service_healthy }
     networks:
       haus-netzwerk:
         ipv4_address: 172.20.0.57
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   zimmer-12-evolution-optimizer:
-    image: python:3.11-slim
+    build:
+      context: ./services/zimmer-12-evolution
+      dockerfile: Dockerfile
     container_name: Zimmer-12-Evolution-Optimizer
-    command: ["tail", "-f", "/dev/null"]
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://ceo_admin:secure_ceo_password_2026@zimmer-archiv-postgres:5432/sin_solver_production
+      REDIS_URL: redis://zimmer-speicher-redis:6379
+      API_COORDINATOR_URL: http://zimmer-13-api-koordinator:8000
+    ports: ["8007:8080"]
+    depends_on:
+      zimmer-archiv-postgres: { condition: service_healthy }
+      zimmer-speicher-redis: { condition: service_healthy }
     networks:
       haus-netzwerk:
         ipv4_address: 172.20.0.53
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  zimmer-18-survey-worker:
+    build:
+      context: ./services/zimmer-18-survey-worker
+      dockerfile: Dockerfile
+    container_name: Zimmer-18-Survey-Worker
+    environment:
+      NODE_ENV: production
+      PORT: 8018
+      REDIS_URL: redis://zimmer-speicher-redis:6379
+      API_COORDINATOR_URL: http://zimmer-13-api-koordinator:8000
+      STEEL_CDP_URL: ws://zimmer-05-steel-tarnkappe:3000/
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+      OPENCODE_ZEN_API_KEY: ${OPENCODE_ZEN_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    ports: ["8018:8018"]
+    depends_on:
+      zimmer-speicher-redis: { condition: service_healthy }
+      zimmer-05-steel-tarnkappe: { condition: service_healthy }
+    networks:
+      haus-netzwerk:
+        ipv4_address: 172.20.0.80
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8018/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Zimmer 15 (AI Research Knowledge Base)
   zimmer-15-surfsense-archiv:
