@@ -1,14 +1,14 @@
 {
-  "sisyphus": { "model": "zen/big-pickle", "fallback": "google/antigravity-gemini-3-flash" },
-  "prometheus": { "model": "zen/reasoning", "fallback": "google/antigravity-gemini-3-pro" },
-  "atlas": { "model": "kat-coder-pro-v1", "fallback": "google/antigravity-gemini-3-pro" },
-  "oracle": { "model": "zen/reasoning", "fallback": "google/antigravity-gemini-3-flash" },
-  "metis": { "model": "zen/advanced", "fallback": "google/antigravity-gemini-3-pro" },
-  "momus": { "model": "zen/advanced", "fallback": "google/antigravity-gemini-3-flash" },
-  "explore": { "model": "grok-code", "fallback": "google/antigravity-gemini-3-flash" },
-  "librarian": { "model": "glm-4.7-free", "fallback": "google/antigravity-gemini-3-flash" },
-  "frontend-ui-ux-engineer": { "model": "mimo-v2-flash", "fallback": "google/antigravity-gemini-3-flash" },
-  "document-writer": { "model": "zen/advanced", "fallback": "google/antigravity-gemini-3-pro" },
-  "multimodal-looker": { "model": "mimo-v2-turbo", "fallback": "google/antigravity-gemini-3-pro" },
-  "orchestrator-sisyphus": { "model": "zen/big-pickle", "fallback": "google/antigravity-gemini-3-flash" }
+  "sisyphus": { "model": "zen/big-pickle" },
+  "prometheus": { "model": "zen/reasoning" },
+  "atlas": { "model": "kat-coder-pro-v1" },
+  "oracle": { "model": "zen/reasoning" },
+  "metis": { "model": "zen/advanced" },
+  "momus": { "model": "zen/advanced" },
+  "explore": { "model": "grok-code" },
+  "librarian": { "model": "glm-4.7-free" },
+  "frontend-ui-ux-engineer": { "model": "mimo-v2-flash" },
+  "document-writer": { "model": "zen/advanced" },
+  "multimodal-looker": { "model": "mimo-v2-turbo" },
+  "orchestrator-sisyphus": { "model": "zen/big-pickle" }
 }
