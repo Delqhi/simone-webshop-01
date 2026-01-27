@@ -1,14 +1,14 @@
 {
-  "sisyphus": { "model": "zen/big-pickle" },
-  "prometheus": { "model": "zen/reasoning" },
-  "atlas": { "model": "kat-coder-pro-v1" },
-  "oracle": { "model": "zen/reasoning" },
-  "metis": { "model": "zen/advanced" },
-  "momus": { "model": "zen/advanced" },
-  "explore": { "model": "grok-code" },
-  "librarian": { "model": "glm-4.7-free" },
-  "frontend-ui-ux-engineer": { "model": "mimo-v2-flash" },
-  "document-writer": { "model": "zen/advanced" },
-  "multimodal-looker": { "model": "mimo-v2-turbo" },
-  "orchestrator-sisyphus": { "model": "zen/big-pickle" }
+  "sisyphus": { "model": "github-copilot/claude-haiku-4-5" },
+  "prometheus": { "model": "github-copilot/claude-haiku-4-5" },
+  "atlas": { "model": "github-copilot/claude-haiku-4-5" },
+  "oracle": { "model": "github-copilot/claude-haiku-4-5" },
+  "metis": { "model": "github-copilot/claude-haiku-4-5" },
+  "momus": { "model": "github-copilot/claude-haiku-4-5" },
+  "explore": { "model": "github-copilot/claude-haiku-4-5" },
+  "librarian": { "model": "github-copilot/claude-haiku-4-5" },
+  "frontend-ui-ux-engineer": { "model": "google/gemini-3-pro" },
+  "document-writer": { "model": "github-copilot/claude-haiku-4-5" },
+  "multimodal-looker": { "model": "github-copilot/claude-haiku-4-5" },
+  "orchestrator-sisyphus": { "model": "github-copilot/claude-haiku-4-5" }
 }
