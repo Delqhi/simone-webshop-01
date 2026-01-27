@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import OnboardingWizard from '@/components/admin/OnboardingWizard'
 import {
   ChartBarIcon,
   ShoppingBagIcon,
@@ -194,6 +195,15 @@ const statusLabels: Record<string, string> = {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
   const [searchQuery, setSearchQuery] = useState('')
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // Check if onboarding should be shown on mount
+  useEffect(() => {
+    const completed = localStorage.getItem('onboarding_completed')
+    if (!completed) {
+      setShowOnboarding(true)
+    }
+  }, [])
 
   const tabs = [
     { id: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
@@ -211,6 +221,14 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-black">
+      {/* Onboarding Wizard Overlay */}
+      {showOnboarding && (
+        <OnboardingWizard
+          onComplete={() => setShowOnboarding(false)}
+          onSkip={() => setShowOnboarding(false)}
+        />
+      )}
+
       {/* Admin Header */}
       <div className="border-b border-white/10 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -1091,6 +1109,22 @@ export default function AdminPage() {
                   </select>
                 </div>
               </div>
+            </div>
+
+            {/* Onboarding Button */}
+            <div className="glass rounded-xl p-6">
+              <h3 className="font-semibold text-white mb-4">Onboarding & Setup</h3>
+              <p className="text-gray-400 mb-4">
+                Starte den Einrichtungsassistenten erneut, um Shop-Einstellungen anzupassen oder neue Features zu konfigurieren.
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowOnboarding(true)}
+                className="w-full md:w-auto"
+              >
+                <ArrowPathIcon className="w-4 h-4 mr-2" />
+                Onboarding wiederholen
+              </Button>
             </div>
 
             <div className="flex justify-end gap-4">
