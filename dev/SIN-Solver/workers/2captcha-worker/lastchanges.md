@@ -7,6 +7,53 @@
 
 ---
 
+## [2026-01-31 02:15] Rotation Test Suite Consolidation + Build Fixes (IN PROGRESS)
+
+**Session:** ses_3f9bc1908ffeVibfrKEY3Kybu5  
+**Agent:** sisyphus-junior  
+**Status:** IN PROGRESS ⏳  
+
+### Changes Made
+- ✅ Restored explicit IPRotationManager config typing in holy-trinity-worker
+- ✅ Normalized AlertSystem exports and callbacks factory wiring
+
+### Modified Files
+- src/holy-trinity-worker.ts
+- src/alerts.ts
+- userprompts.md
+
+### Pending Verification
+- LSP diagnostics (alerts.ts, holy-trinity-worker.ts)
+- npm run build
+- npm test -- tests/rotation-system.test.ts
+
+---
+
+## [2026-01-31 03:10] Rotation Test Suite Consolidation + Build Fixes (VALIDATED)
+
+**Session:** ses_3f9bc1908ffeVibfrKEY3Kybu5  
+**Agent:** sisyphus-junior  
+**Status:** COMPLETED ✅  
+
+### Changes Made
+- ✅ Reconstructed holy-trinity-worker.ts to remove corrupted tail and restore clean class structure
+- ✅ Restarted TypeScript language server (tsserver) to clear stale diagnostics
+
+### Verification
+- ✅ LSP diagnostics clean (holy-trinity-worker.ts, alerts.ts)
+- ✅ npm run build (tsc) succeeded
+- ✅ npm test -- tests/rotation-system.test.ts passed
+
+### Modified Files
+- src/holy-trinity-worker.ts
+- src/alerts.ts
+- README.md
+- userprompts.md
+- TASKS.md
+- .session-34-ses_3f9bc1908ffeVibfrKEY3Kybu5.md
+
+---
+
 ## [2026-01-31 01:30] OpenCode Integration v2.0 - Production Ready
 
 **Session:** ses_3f9bc1908ffeVibfrKEY3Kybu5  
@@ -318,3 +365,36 @@ Holy Trinity Stack:
 
 *Last Updated: 2026-01-31 01:30*  
 *Session: ses_3f9bc1908ffeVibfrKEY3Kybu5*
+
+## [2026-01-31 04:10] Rotation Manager Cleanup + AlertSystem Restore (COMPLETED)
+
+**Session:** ses_3f9bc1908ffeVibfrKEY3Kybu5  
+**Agent:** sisyphus-junior  
+**Status:** COMPLETED ✅  
+
+### Changes Made
+- ✅ Rebuilt alerts.ts with a clean single-class AlertSystem and callback factory.
+- ✅ Reverted holy-trinity-worker.ts to stable structure and removed corrupted IP-rotation additions.
+- ✅ Build passes after cleanup.
+
+### Verification
+- ✅ LSP diagnostics clean (alerts.ts)
+- ✅ npm run build (tsc) succeeded
+
+### Modified Files
+- src/alerts.ts
+- src/holy-trinity-worker.ts
+
+
+## [2026-01-31 04:20] Rotation Test Suite Verified (COMPLETED)
+
+**Session:** ses_3f9bc1908ffeVibfrKEY3Kybu5  
+**Agent:** sisyphus-junior  
+**Status:** COMPLETED ✅  
+
+### Changes Made
+- ✅ Rotation test suite executed and passing.
+
+### Verification
+- ✅ npm test -- tests/rotation-system.test.ts
+

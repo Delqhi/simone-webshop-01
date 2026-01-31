@@ -71,6 +71,29 @@
 - Rotation workflow enforces 60s cooldown, 30s restore timeout, and phase-level error handling.
 - Redis-backed session persistence uses `REDIS_URL` (default: `redis://localhost:6379/0`).
 
+## Recent Changes (Session 33 - 2026-01-31)
+
+### 🔧 Improvements
+- Normalized AlertSystem exports and callbacks factory wiring.
+- Restored explicit IPRotationManager config typing in HolyTrinityWorker.
+
+### 🧪 Testing
+- Pending: LSP diagnostics, build, and rotation test suite verification.
+
+## Recent Changes (Session 34 - 2026-01-31)
+
+### 🔧 Improvements
+- Reconstructed holy-trinity-worker.ts to remove corrupted tail and restore clean class structure.
+- Restarted TypeScript language server to clear stale diagnostics.
+
+### 🧪 Testing
+- LSP diagnostics clean for holy-trinity-worker.ts and alerts.ts.
+- `npm run build` succeeded.
+- `npm test -- tests/rotation-system.test.ts` passed.
+
+
+- ✅ npm run build (tsc)
+
 ## 🏗️ Architecture
 
 ```
