@@ -1,0 +1,10 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/agents/page": "app/agents/page.js",
+  "/infrastructure/page": "app/infrastructure/page.js",
+  "/jobs/page": "app/jobs/page.js",
+  "/moltbot/page": "app/moltbot/page.js",
+  "/workers/page": "app/workers/page.js",
+  "/storage/page": "app/storage/page.js",
+  "/page": "app/page.js"
+}
