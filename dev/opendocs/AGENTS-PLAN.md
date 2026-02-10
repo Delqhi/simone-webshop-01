@@ -510,3 +510,7 @@ e6408e1 fix(typescript): resolve remaining type safety issues in metrics and sto
 **Session 17 Complete Status:** ✅ ALL TASKS DONE  
 **Next Steps:** User testing in browser + Feature feedback  
 **Documentation:** AGENTS-PLAN.md fully updated
+
+---
+
+**⚡ SEE ALSO:** SESSION 18-VERIFICATION.md for complete Serena MCP testing details and full secrets documentation in `/Users/jeremy/dev/environments-jeremy.md`
