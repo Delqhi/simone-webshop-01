@@ -7,6 +7,7 @@ import { WorkflowBlockView } from "@/components/blocks/WorkflowBlockView";
 import { DrawBlockView } from "@/components/blocks/DrawBlockView";
 import { N8nBlockView } from "@/components/blocks/N8nBlockView";
 import { AiPromptBlockView } from "@/components/blocks/AiPromptBlockView";
+import { VideoBlockView } from "@/components/blocks/types/MediaBlock";
 import { BlockToolbar, type AITransformationType } from "@/components/blocks/BlockToolbar";
 import { BlockChatModal } from "@/components/blocks/BlockChatModal";
 import { useState } from "react";
@@ -102,7 +103,7 @@ export function BlockRenderer({
           : "text-xl font-semibold";
 
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <input
           disabled={disabled}
@@ -114,7 +115,7 @@ export function BlockRenderer({
     );
   } else if (block.type === "paragraph") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <textarea
           disabled={disabled}
@@ -133,7 +134,7 @@ export function BlockRenderer({
     );
   } else if (block.type === "code") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <input
@@ -169,7 +170,7 @@ export function BlockRenderer({
     );
   } else if (block.type === "callout") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <div className="mb-2 flex items-center gap-2">
           <select
@@ -203,7 +204,7 @@ export function BlockRenderer({
   } else if (block.type === "checklist") {
     const checklistBlock = block as ChecklistBlock;
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <div className="space-y-2">
           {checklistBlock.items.map((it, idx) => (
@@ -245,35 +246,35 @@ export function BlockRenderer({
     content = <TableEditor block={block} disabled={disabled} frame={frame} toolbar={toolbar} onUpdate={onUpdate} />;
   } else if (block.type === "database") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <DatabaseBlockView block={block} disabled={disabled} onUpdate={onUpdate} />
       </div>
     );
   } else if (block.type === "workflow") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <WorkflowBlockView block={block} disabled={disabled} onUpdate={onUpdate} />
       </div>
     );
   } else if (block.type === "draw") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <DrawBlockView block={block} disabled={disabled} onUpdate={onUpdate} />
       </div>
     );
   } else if (block.type === "n8n") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <N8nBlockView block={block} disabled={disabled} onUpdate={onUpdate} />
       </div>
     );
   } else if (block.type === "aiPrompt") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <AiPromptBlockView
           pageId={pageId}
@@ -286,7 +287,7 @@ export function BlockRenderer({
     );
   } else if (block.type === "mermaid") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <textarea
           disabled={disabled}
@@ -301,7 +302,7 @@ export function BlockRenderer({
     );
   } else if (block.type === "quote") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <textarea
           disabled={disabled}
@@ -313,14 +314,14 @@ export function BlockRenderer({
     );
   } else if (block.type === "divider") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="flex items-center justify-between">{toolbar}</div>
         <div className="my-3 h-px w-full bg-zinc-200 dark:bg-zinc-800" />
       </div>
     );
   } else if (block.type === "image") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <input
           disabled={disabled}
@@ -339,31 +340,19 @@ export function BlockRenderer({
       </div>
     );
   } else if (block.type === "video") {
-    const embed = toEmbedUrl(block.url);
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
-        <input
+        <VideoBlockView
+          block={block}
           disabled={disabled}
-          value={block.url}
-          onChange={(e) => onUpdate({ url: e.target.value })}
-          placeholder="Video URL (YouTube/Vimeo)"
-          className="mb-2 w-full rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
+          onUpdate={onUpdate}
         />
-        {embed ? (
-          <div className="aspect-video w-full overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800">
-            <iframe className="h-full w-full" src={embed} title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
-          </div>
-        ) : (
-          <div className="rounded-md border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            Paste a supported URL
-          </div>
-        )}
       </div>
     );
   } else if (block.type === "link") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <input
           disabled={disabled}
@@ -376,7 +365,7 @@ export function BlockRenderer({
     );
   } else if (block.type === "file") {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <div className="flex items-center gap-2">
           <input
@@ -397,7 +386,7 @@ export function BlockRenderer({
     );
   } else {
     content = (
-      <div className={`rounded-lg border p-3 ${frame}`}>
+      <div className={`p-3 ${frame}`}>
         <div className="mb-2 flex items-center justify-between">{toolbar}</div>
         <div className="text-sm text-zinc-600 dark:text-zinc-300">Unsupported block type: {(block as DocBlock).type}</div>
       </div>
@@ -519,7 +508,7 @@ function TableEditor({
   };
 
   return (
-    <div className={`group rounded-lg border p-4 transition-all ${frame} hover:shadow-sm`}>
+    <div className={`group p-4 transition-all ${frame} hover:shadow-sm`}>
       <div className="mb-4 flex items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-800/50">
         <div className="flex items-center gap-2">
           {!disabled && (

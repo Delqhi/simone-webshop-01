@@ -4,7 +4,7 @@ import { Image as ImageIcon, Video as VideoIcon, Wand2, ChevronDown, ChevronRigh
 import { useDocsStore } from "@/store/useDocsStore";
 import { executeOpenDocsCommand } from "@/commands/executeCommand";
 
-const API_AUTH_TOKEN = process.env.VITE_API_AUTH_TOKEN || process.env.API_AUTH_TOKEN || "";
+const API_AUTH_TOKEN = import.meta.env.VITE_API_AUTH_TOKEN || "";
 
 export function ImageBlockView({
   block,

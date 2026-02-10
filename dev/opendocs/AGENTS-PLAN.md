@@ -255,20 +255,205 @@ Before marking any feature complete:
 
 ---
 
-## 🎯 SESSION 17 TASK LIST (IMMEDIATE)
+## 🎯 SESSION 19 - MASTER TASK LIST (FEBRUARY 10, 2026)
 
-**NEXT ACTIONS (DO IN ORDER):**
+### 🚨 PRIORITY 0: YouTube Video Analysis Backend (COMPLETE IMPLEMENTATION)
 
-1. **Create AGENTS-PLAN.md with all features** ← IN PROGRESS
-2. **Create mock N8N service**
-3. **Create mock Supabase service**
-4. **Create mock OpenClaw service**
-5. **Test all features with mock services**
-6. **Implement YouTube Video Analysis backend**
-7. **Complete If/Then Automation implementation**
-8. **Update all documentation**
+**Status:** UI 100% Complete, Backend 0% - MUST IMPLEMENT NOW
 
-**STATUS:** READY TO IMPLEMENT - NO BLOCKERS
+**Tasks:**
+1. **YT.01** Research and implement YouTube transcript extraction (youtube-transcript-api or similar)
+2. **YT.02** Implement scene detection AI using NVIDIA Mistral API
+3. **YT.03** Create video clip segmentation logic
+4. **YT.04** Implement `/api/video/transcribe` endpoint with real transcript data
+5. **YT.05** Implement `/api/video/analyze-scenes` endpoint with AI scene detection
+6. **YT.06** Implement `/api/video/create-clips` endpoint to create video blocks from scenes
+7. **YT.07** Test full flow: YouTube URL → Transcript → Scenes → Import Clips
+8. **YT.08** Browser verification: Test video analysis UI end-to-end
+
+**Time Estimate:** 4-6 hours
+**Success Criteria:** User can paste YouTube URL, click "AI Analyze", and get real transcript with scene breakdown
+
+---
+
+### 🎨 PRIORITY 1: AI Block Creation via Slash Menu
+
+**Status:** Not Implemented - Frontend Feature
+
+**Tasks:**
+1. **AI.01** Create AI block creation UI component (modal/panel)
+2. **AI.02** Implement natural language prompt input for block creation
+3. **AI.03** Integrate with `/api/agent/plan` endpoint
+4. **AI.04** Add to slash menu as `/ai-create` command
+5. **AI.05** Support creating: text, table, code, list, heading blocks via AI
+6. **AI.06** Browser verification: Test AI block creation flow
+
+**Time Estimate:** 3-4 hours
+**Success Criteria:** User types `/ai-create`, enters prompt like "Create a table with 3 columns", AI generates the block
+
+---
+
+### 💬 PRIORITY 2: Per-Block AI Chat (Enhanced)
+
+**Status:** Basic icon exists, needs full implementation
+
+**Tasks:**
+1. **CHAT.01** Create per-block AI chat panel component
+2. **CHAT.02** Implement chat context (block content as context)
+3. **CHAT.03** Add chat history per block (stored in localStorage)
+4. **CHAT.04** Integrate with NVIDIA Mistral API for responses
+5. **CHAT.05** Support block editing via chat commands
+6. **CHAT.06** Browser verification: Test chatting with individual blocks
+
+**Time Estimate:** 3-4 hours
+**Success Criteria:** Each block has AI chat icon, clicking opens chat panel, AI understands block context
+
+---
+
+### 🔗 PRIORITY 3: n8n Workflow Node Module Block
+
+**Status:** UI exists, needs full node module integration
+
+**Tasks:**
+1. **N8N.01** Research n8n node modules API structure
+2. **N8N.02** Create n8n node selection UI (all available nodes)
+3. **N8N.03** Implement node configuration panel (per node type)
+4. **N8N.04** Add node connection visualization (React Flow)
+5. **N8N.05** Implement workflow execution via n8n API
+6. **N8N.06** Add workflow save/load functionality
+7. **N8N.07** Browser verification: Test creating and running n8n workflows
+
+**Time Estimate:** 5-6 hours
+**Success Criteria:** User can add n8n block, select nodes, connect them, and execute workflows
+
+---
+
+### 🕸️ PRIORITY 4: Flow/Graph View for Database Blocks
+
+**Status:** Partially implemented, needs completion
+
+**Tasks:**
+1. **FLOW.01** Implement React Flow visualization for database relationships
+2. **FLOW.02** Add node types: Table, Column, Relation
+3. **FLOW.03** Implement edge connections for foreign keys
+4. **FLOW.04** Add interactive node editing
+5. **FLOW.05** Implement mini-map and controls
+6. **FLOW.06** Browser verification: Test visual database editing
+
+**Time Estimate:** 4-5 hours
+**Success Criteria:** Database blocks have Flow view showing tables as nodes, relationships as edges
+
+---
+
+### 🎭 PRIORITY 5: Icon System (Emoji + Lucide + Custom Upload)
+
+**Status:** Partially implemented, needs completion
+
+**Tasks:**
+1. **ICON.01** Create icon picker component with tabs (Emoji / Lucide / Custom)
+2. **ICON.02** Integrate emoji-picker-react or similar
+3. **ICON.03** Add Lucide icon browser with search
+4. **ICON.04** Implement custom icon upload (SVG/PNG)
+5. **ICON.05** Store custom icons in localStorage or Supabase
+6. **ICON.06** Apply icons to pages, blocks, and database views
+7. **ICON.07** Browser verification: Test icon selection and upload
+
+**Time Estimate:** 3-4 hours
+**Success Criteria:** User can choose emoji, Lucide icon, or upload custom icon for any page/block
+
+---
+
+### 🎨 PRIORITY 6: Block Borders Removal
+
+**Status:** Needs verification and completion
+
+**Tasks:**
+1. **BORDER.01** Audit all block components for border/frame styles
+2. **BORDER.02** Remove border classes from all block containers
+3. **BORDER.03** Update hover states to work without borders
+4. **BORDER.04** Ensure clean visual hierarchy without frames
+5. **BORDER.05** Browser verification: Visual check of all block types
+
+**Time Estimate:** 1-2 hours
+**Success Criteria:** No visible borders/frames around blocks, clean modern appearance
+
+---
+
+### 🧪 PRIORITY 7: Browser Testing & Verification
+
+**Status:** Not started
+
+**Tasks:**
+1. **TEST.01** Start backend server (`node server.js`)
+2. **TEST.02** Build frontend (`npm run build`)
+3. **TEST.03** Open browser at http://localhost:5173
+4. **TEST.04** Test YouTube video analysis end-to-end
+5. **TEST.05** Test AI block creation
+6. **TEST.06** Test per-block AI chat
+7. **TEST.07** Test n8n workflow blocks
+8. **TEST.08** Test database flow view
+9. **TEST.09** Test icon system
+10. **TEST.10** Run LSP diagnostics check
+11. **TEST.11** Document any issues found
+
+**Time Estimate:** 2-3 hours
+**Success Criteria:** All features work in browser, no console errors, LSP clean
+
+---
+
+### 📝 PRIORITY 8: Documentation Updates
+
+**Status:** Partially complete
+
+**Tasks:**
+1. **DOC.01** Update AGENTS-PLAN.md with completed tasks
+2. **DOC.02** Create YOUTUBE.md integration guide
+3. **DOC.03** Update API-ENDPOINTS.md with new video endpoints
+4. **DOC.04** Update README.md with new features
+5. **DOC.05** Create testing report
+
+**Time Estimate:** 1-2 hours
+**Success Criteria:** All documentation reflects current implementation
+
+---
+
+## ⏱️ TOTAL TIME ESTIMATE: 26-36 hours
+
+## ✅ SUCCESS CRITERIA (ALL MUST PASS)
+
+- [ ] YouTube video analysis works end-to-end with real transcripts
+- [ ] AI can create blocks via slash menu
+- [ ] Each block has functional AI chat
+- [ ] n8n workflows can be created and executed
+- [ ] Database has visual flow/graph view
+- [ ] Icon system supports emoji, Lucide, and custom uploads
+- [ ] No block borders/frames visible
+- [ ] All features tested and working in browser
+- [ ] LSP diagnostics clean (0 errors)
+- [ ] TypeScript strict mode compliant
+- [ ] All documentation updated
+
+---
+
+## 🚫 CONSTRAINTS (STRICT COMPLIANCE)
+
+1. **NO AGENT DELEGATION** - Do all work myself
+2. **USE SERENA MCP ONLY** - No native tools
+3. **IMPLEMENT IN CODE** - Not just chat/documentation
+4. **TEST IN BROWSER** - Every feature must be verified
+5. **BEST PRACTICES FEB 2026** - Follow all standards
+6. **NO PLACEHOLDERS** - Everything must be real and working
+
+---
+
+## 🎯 NEXT IMMEDIATE ACTION
+
+**Starting with YT.01:** Research and implement YouTube transcript extraction
+
+**Command:**
+```bash
+npm install youtube-transcript-api
+```
 
 ---
 

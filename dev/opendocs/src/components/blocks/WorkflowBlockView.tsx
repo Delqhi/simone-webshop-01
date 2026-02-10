@@ -1,6 +1,34 @@
-import { useState } from "react";
-import { Edit2, Trash2 } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MiniMap,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  type Node,
+  type Edge,
+  type Connection,
+  MarkerType,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import type { WorkflowBlock, DocBlock } from "@/types/docs";
+
+// Custom node component
+function CustomNode({ data }: { data: { label: string } }) {
+  return (
+    <div>
+      <div className="rounded bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm font-medium">
+        {data.label}
+      </div>
+    </div>
+  );
+}
+
+const nodeTypes = {
+  custom: CustomNode,
+};
 
 export function WorkflowBlockView({
   block,
@@ -12,159 +40,117 @@ export function WorkflowBlockView({
   onUpdate: (patch: Partial<DocBlock>) => void;
 }) {
   const { data } = block;
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleValue, setTitleValue] = useState(data.title || "Workflow");
 
-  const handleTitleSave = () => {
-    if (titleValue.trim() && titleValue !== data.title) {
-      onUpdate({ data: { ...data, title: titleValue.trim() } });
-    }
-    setEditingTitle(false);
-    setTitleValue(data.title || "Workflow");
-  };
-
-  const handleTitleCancel = () => {
-    setEditingTitle(false);
-    setTitleValue(data.title || "Workflow");
-  };
-
-  const handleAddNode = () => {
-    if (disabled) return;
-    const newNodeId = `node_${Date.now()}`;
-    const newNodes = [
-      ...data.nodes,
-      {
-        id: newNodeId,
-        x: 100 + data.nodes.length * 50,
-        y: 100 + (data.nodes.length % 3) * 80,
-        label: `Node ${data.nodes.length + 1}`,
+  // Transform nodes for ReactFlow
+  const initialNodes: Node[] = useMemo(() => {
+    return (data.nodes || []).map((node) => ({
+      id: node.id,
+      type: "default",
+      position: { x: node.x || 100, y: node.y || 100 },
+      data: { label: node.label || "Untitled" },
+      style: {
+        background: node.color || "#ffffff",
+        border: "1px solid #e2e8f0",
+        borderRadius: "8px",
+        padding: "10px 14px",
+        minWidth: "120px",
+        fontFamily: "sans-serif",
+        fontSize: "14px",
+        fontWeight: 500,
       },
-    ];
-    onUpdate({ data: { ...data, nodes: newNodes } });
-  };
+    }));
+  }, [data.nodes]);
 
-  const handleDeleteNode = (nodeId: string) => {
+  // Transform edges for ReactFlow
+  const initialEdges: Edge[] = useMemo(() => {
+    return (data.edges || []).map((edge) => ({
+      ...edge,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      style: { stroke: "#64748b", strokeWidth: 2 },
+    }));
+  }, [data.edges]);
+
+  const [nodes, _setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Handle node position changes
+  const onNodeDragStop = useCallback(() => {
     if (disabled) return;
-    const newNodes = data.nodes.filter((n) => n.id !== nodeId);
-    const newEdges = data.edges.filter(
-      (e) => e.source !== nodeId && e.target !== nodeId
-    );
-    onUpdate({ data: { ...data, nodes: newNodes, edges: newEdges } });
-  };
+    
+    // Map back to block data format
+    const updatedNodes = nodes.map((node) => {
+      const originalNode = data.nodes?.find((n) => n.id === node.id);
+      return {
+        id: node.id,
+        x: node.position.x,
+        y: node.position.y,
+        label: node.data?.label || (originalNode?.label || "Untitled"),
+        color: node.style?.background || originalNode?.color,
+      };
+    });
+
+    onUpdate({ data: { ...data, nodes: updatedNodes } });
+  }, [nodes, disabled, data, onUpdate]);
+
+  // Handle new connections
+  const onConnect = useCallback(
+    (params: Connection) => new Promise<void>((resolve) => {
+      if (disabled) {
+        resolve();
+        return;
+      }
+
+      setEdges((eds) => addEdge(params, eds));
+      
+      // Save to block data
+      const newEdge = {
+        id: `edge-${Date.now()}`,
+        source: params.source || "",
+        target: params.target || "",
+        sourceHandle: params.sourceHandle,
+        targetHandle: params.targetHandle,
+      };
+
+      const updatedEdges = [...(data.edges || []), newEdge];
+      onUpdate({ data: { ...data, edges: updatedEdges } });
+      resolve();
+    }),
+    [disabled, data, onUpdate, setEdges],
+  );
+
+  // Sync nodes/edges with data when they change
+  useMemo(() => {
+    if (JSON.stringify(nodes.map(n => ({ id: n.id, position: n.position, data: n.data }))) !== 
+        JSON.stringify(initialNodes.map(n => ({ id: n.id, position: n.position, data: n.data })))) {
+      // Don't trigger update on first render
+    }
+  }, [initialNodes]);
 
   return (
-    <div className="space-y-4 rounded border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
-      {/* Header with title */}
-      <div className="flex items-center justify-between">
-        {editingTitle ? (
-          <div className="flex flex-1 gap-2">
-            <input
-              type="text"
-              value={titleValue}
-              onChange={(e) => setTitleValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleTitleSave();
-                if (e.key === "Escape") handleTitleCancel();
-              }}
-              autoFocus
-              className="flex-1 rounded border border-zinc-300 px-2 py-1 text-sm font-semibold dark:border-zinc-600 dark:bg-zinc-800"
-              placeholder="Workflow title"
-            />
-            <button
-              onClick={handleTitleSave}
-              className="text-xs font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-            >
-              Save
-            </button>
-            <button
-              onClick={handleTitleCancel}
-              className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 flex-1">
-            <h3 className="font-semibold">{titleValue}</h3>
-            {!disabled && (
-              <button
-                onClick={() => setEditingTitle(true)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                title="Edit title"
-              >
-                <Edit2 size={16} />
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded bg-zinc-50 p-2 dark:bg-zinc-800">
-          <div className="font-semibold text-zinc-900 dark:text-zinc-100">
-            {data.nodes.length}
-          </div>
-          <div className="text-xs text-zinc-600 dark:text-zinc-400">
-            Node{data.nodes.length !== 1 ? "s" : ""}
-          </div>
-        </div>
-        <div className="rounded bg-zinc-50 p-2 dark:bg-zinc-800">
-          <div className="font-semibold text-zinc-900 dark:text-zinc-100">
-            {data.edges.length}
-          </div>
-          <div className="text-xs text-zinc-600 dark:text-zinc-400">
-            Connection{data.edges.length !== 1 ? "s" : ""}
-          </div>
-        </div>
-      </div>
-
-      {/* Nodes list */}
-      {data.nodes.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-            NODES
-          </div>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {data.nodes.map((node) => (
-              <div
-                key={node.id}
-                className="flex items-center justify-between rounded bg-zinc-50 px-2 py-1 text-xs dark:bg-zinc-800"
-              >
-                <span className="text-zinc-700 dark:text-zinc-300">
-                  {node.label}
-                </span>
-                {!disabled && (
-                  <button
-                    onClick={() => handleDeleteNode(node.id)}
-                    className="text-zinc-400 hover:text-red-600 dark:hover:text-red-400"
-                    title="Delete node"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+    <div className="rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800" style={{ height: "500px", width: "100%" }}>
+      {nodes.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center text-sm text-zinc-400">
+          Drag nodes here or add nodes from the toolbar
         </div>
       )}
-
-      {/* Add node button */}
-      {!disabled && (
-        <button
-          onClick={handleAddNode}
-          className="w-full rounded border border-dashed border-zinc-300 px-3 py-2 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-600 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-        >
-          + Add Node
-        </button>
-      )}
-
-      {/* Empty state */}
-      {data.nodes.length === 0 && !disabled && (
-        <div className="rounded bg-zinc-50 p-3 text-center text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-          No nodes yet. Click "Add Node" to get started.
-        </div>
-      )}
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={disabled ? undefined : onNodesChange}
+        onEdgesChange={disabled ? undefined : onEdgesChange}
+        onConnect={onConnect}
+        onNodeDragStop={onNodeDragStop}
+        nodeTypes={nodeTypes}
+        fitView
+        attributionPosition="bottom-left"
+      >
+        <Background color="#94a3b8" gap={16} />
+        <Controls />
+        <MiniMap 
+          nodeColor={(node) => (node.style?.background as string) || "#ffffff"}
+          maskColor="rgba(0, 0, 0, 0.1)"
+        />
+      </ReactFlow>
     </div>
   );
 }
