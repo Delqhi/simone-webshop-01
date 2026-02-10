@@ -7,6 +7,7 @@ import { healthMiddleware, readinessMiddleware, livenessMiddleware } from "./src
 import { metricsMiddleware, metricsHandler, resetMetricsHandler } from "./src/monitoring/metrics.js";
 import { loggingMiddleware, logsHandler, clearLogsHandler } from "./src/monitoring/logging.js";
 import { mockN8nService, mockSupabaseService, mockOpenClawService } from "./src/api/mock-services/index.js";
+import { createCacheMiddleware, getCacheManager } from "./src/middleware/cache-manager.js";
 
 const { Pool } = pg;
 
@@ -104,6 +105,22 @@ app.use((req, res, next) => {
 
   next();
 });
+
+const cacheMiddleware = createCacheMiddleware({
+  endpointTTLs: {
+    "/api/health": 30_000,
+    "/api/n8n/workflows": 60_000,
+    "/api/supabase/tables": 120_000
+  },
+  noCachePatterns: [
+    "/api/nvidia/",
+    "/api/agent/",
+    "/api/website/",
+    "/api/metrics",
+    "/api/logs"
+  ]
+});
+app.use(cacheMiddleware);
 
 function requireApiAuth(req, res, next) {
   if (!API_AUTH_TOKEN) return next();
@@ -1389,6 +1406,14 @@ app.get("/metrics", metricsHandler);
 app.post("/metrics/reset", resetMetricsHandler);
 app.get("/logs", logsHandler);
 app.post("/logs/clear", clearLogsHandler);
+
+app.get("/api/cache/stats", requireApiAuth, (_req, res) => {
+  const stats = getCacheManager().getStats();
+  res.json({
+    cache: stats,
+    timestamp: new Date().toISOString()
+  });
+});
 
 app.listen(PORT, () => {
   console.log("\n╔══════════════════════════════════════════════════════════════╗");
