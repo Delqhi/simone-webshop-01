@@ -8,6 +8,9 @@ import { metricsMiddleware, metricsHandler, resetMetricsHandler } from "./src/mo
 import { loggingMiddleware, logsHandler, clearLogsHandler } from "./src/monitoring/logging.js";
 import { mockN8nService, mockSupabaseService, mockOpenClawService } from "./src/api/mock-services/index.js";
 import { createCacheMiddleware, getCacheManager } from "./src/middleware/cache-manager.js";
+import { createRateLimitMiddleware } from "./src/middleware/rate-limiter.js";
+import { createErrorMiddleware } from "./src/middleware/error-handler.js";
+import { AuthError } from "./src/utils/error-types.js";
 
 const { Pool } = pg;
 
@@ -70,41 +73,15 @@ app.use((req, res, next) => {
   next();
 });
 
+const rateLimitMiddleware = createRateLimitMiddleware();
+app.use(rateLimitMiddleware);
+
 // Monitoring Middleware Pipeline
 app.use(healthMiddleware);
 app.use(readinessMiddleware);
 app.use(livenessMiddleware);
 app.use(metricsMiddleware);
 app.use(loggingMiddleware);
-
-// Rate limiter for /api/*
-const bucket = new Map();
-app.use((req, res, next) => {
-  if (!req.path.startsWith("/api/")) return next();
-
-  const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
-  const now = Date.now();
-  const key = `ip:${ip}`;
-  const entry = bucket.get(key) || { resetAt: now + RATE_LIMIT_WINDOW_MS, count: 0 };
-
-  if (now > entry.resetAt) {
-    entry.resetAt = now + RATE_LIMIT_WINDOW_MS;
-    entry.count = 0;
-  }
-
-  entry.count += 1;
-  bucket.set(key, entry);
-
-  res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX));
-  res.setHeader("X-RateLimit-Remaining", String(Math.max(0, RATE_LIMIT_MAX - entry.count)));
-  res.setHeader("X-RateLimit-Reset", String(entry.resetAt));
-
-  if (entry.count > RATE_LIMIT_MAX) {
-    return res.status(429).json({ error: "rate_limit", message: "Too many requests" });
-  }
-
-  next();
-});
 
 const cacheMiddleware = createCacheMiddleware({
   endpointTTLs: {
@@ -126,7 +103,7 @@ function requireApiAuth(req, res, next) {
   if (!API_AUTH_TOKEN) return next();
   const token = req.header("x-opendocs-token") || "";
   if (!token || token !== API_AUTH_TOKEN) {
-    return res.status(401).json({ error: "unauthorized", message: "Missing/invalid X-OpenDocs-Token" });
+    return next(new AuthError("Missing or invalid API token"));
   }
   next();
 }
@@ -1414,6 +1391,8 @@ app.get("/api/cache/stats", requireApiAuth, (_req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+app.use(createErrorMiddleware());
 
 app.listen(PORT, () => {
   console.log("\n╔══════════════════════════════════════════════════════════════╗");
