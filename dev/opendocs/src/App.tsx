@@ -22,6 +22,7 @@ export function App() {
   const [commandOpen, setCommandOpen] = useState(false);
 
 
+  // Apply dark class immediately on mount to prevent flash of light mode
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") root.classList.add("dark");

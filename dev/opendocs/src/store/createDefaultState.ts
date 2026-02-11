@@ -39,12 +39,19 @@ export function createDefaultState(): DocsState {
 
   const folders: Record<string, DocFolder> = { [rootFolderId]: root };
 
+  // Best Practice 2026: Detect system dark mode preference
+  const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const savedTheme = localStorage.getItem("opendocs-theme");
+  const initialTheme = savedTheme === "dark" || savedTheme === "light"
+    ? savedTheme
+    : (systemPrefersDark ? "dark" : "light");
+
   return {
     rootFolderId,
     folders,
     pages,
     selectedPageId: welcome.id,
     expandedFolderIds: { [rootFolderId]: true },
-    theme: "light",
+    theme: initialTheme,
   };
 }
