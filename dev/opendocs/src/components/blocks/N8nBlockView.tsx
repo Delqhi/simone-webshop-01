@@ -66,7 +66,7 @@ export function N8nBlockView({
   const parameterCount = Object.keys(nodeInfo.parameters || {}).length;
 
   return (
-    <div className="space-y-4 rounded border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
+    <div className="space-y-4 bg-white p-4 dark:bg-zinc-900">
       {/* Title Section */}
       <div className="flex items-center justify-between">
         {editingTitle ? (
@@ -105,6 +105,37 @@ export function N8nBlockView({
             )}
           </>
         )}
+      </div>
+
+      {/* Workflow ID Section */}
+      <div className="space-y-2 rounded bg-zinc-50 p-3 dark:bg-zinc-800">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Webhook URL / ID
+        </h4>
+        <div className="flex gap-2">
+          <input
+            disabled={disabled}
+            value={data.workflowId || ""}
+            onChange={(e) => onUpdate({ data: { ...data, workflowId: e.target.value } })}
+            placeholder="Enter Webhook ID or URL..."
+            className="flex-1 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800"
+          />
+          {data.workflowId && (
+            <button
+              type="button"
+              onClick={handleCopyWorkflowId}
+              className={cn(
+                "transition-colors rounded border border-zinc-200 p-1 dark:border-zinc-700",
+                copiedWorkflow
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+              )}
+            >
+              {copiedWorkflow ? <Check size={14} /> : <Copy size={14} />}
+            </button>
+          )}
+        </div>
+        <p className="text-[10px] text-zinc-500 italic">Used for connecting to n8n triggers and external callbacks.</p>
       </div>
 
       {/* Node Information Section */}

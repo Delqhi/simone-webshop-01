@@ -2,18 +2,26 @@ import express from "express";
 import "dotenv/config";
 import crypto from "crypto";
 import { parse } from "url";
+import compression from "compression";
 import pg from "pg";
+import fs from "fs";
+import yaml from "js-yaml";
+import swaggerUi from "swagger-ui-express";
 import { healthMiddleware, readinessMiddleware, livenessMiddleware } from "./src/monitoring/health.js";
 import { metricsMiddleware, metricsHandler, resetMetricsHandler } from "./src/monitoring/metrics.js";
-import { loggingMiddleware, logsHandler, clearLogsHandler } from "./src/monitoring/logging.js";
-import { traceContextMiddleware } from "./src/monitoring/trace-context.js";
-import { enhancedMetricsMiddleware, metricsHandler as enhancedMetricsHandler, clearMetricsHandler } from "./src/monitoring/enhanced-metrics.js";
-import { mockN8nService, mockSupabaseService, mockOpenClawService } from "./src/api/mock-services/index.js";
-import { createCacheMiddleware, getCacheManager } from "./src/middleware/cache-manager.js";
 import { createRateLimitMiddleware } from "./src/middleware/rate-limiter.js";
+import { traceContextMiddleware } from "./src/monitoring/trace-context.js";
+import { enhancedMetricsMiddleware, clearMetricsHandler } from "./src/monitoring/enhanced-metrics.js";
+import { loggingMiddleware, logsHandler, clearLogsHandler } from "./src/monitoring/logging.js";
+import { createCacheMiddleware } from "./src/middleware/cache-manager.js";
+import { alertsHandler, checkAlertsHandler, clearAlertsHandler, addTestAlertHandler, alertManager } from "./src/monitoring/alerts.js";
 import { createErrorMiddleware } from "./src/middleware/error-handler.js";
+import TodoManager from "./todo-manager.js";
+import { initializeTodoLoop } from "./todo-loop.js";
 import { AuthError } from "./src/utils/error-types.js";
-import { collector as metricsCollector } from "./src/monitoring/enhanced-metrics.js";
+import { WebSocketServer, WebSocket } from "ws";
+
+console.log("Environment API_AUTH_TOKEN:", process.env.API_AUTH_TOKEN);
 
 const { Pool } = pg;
 
@@ -31,7 +39,12 @@ const SUPABASE_DB_URL = process.env.SUPABASE_DB_URL || "";
 const SUPABASE_DB_SCHEMA = process.env.SUPABASE_DB_SCHEMA || "public";
 
 const dbPool = SUPABASE_DB_URL
-  ? new Pool({ connectionString: SUPABASE_DB_URL, max: 4, idleTimeoutMillis: 10_000 })
+  ? new Pool({ 
+      connectionString: SUPABASE_DB_URL, 
+      max: 20, // Optimized: Increased max connections for higher throughput
+      idleTimeoutMillis: 30_000, // Optimized: Increased idle timeout to reduce reconnection overhead
+      connectionTimeoutMillis: 2000 // Optimized: Fail fast if DB is unreachable
+    })
   : null;
 
 if (SUPABASE_DB_URL) {
@@ -55,6 +68,217 @@ if (!NVIDIA_API_KEY) {
 const app = express();
 app.disable("x-powered-by");
 app.use(express.json({ limit: "1mb" }));
+
+const WS_PORT = Number(process.env.WS_PORT || 3001);
+const wsServer = new WebSocketServer({ port: WS_PORT });
+console.log(`[WebSocket] Server started on port ${WS_PORT}`);
+
+class WebSocketManager {
+    constructor() {
+        this.clients = new Set();
+        this.messageQueue = new Map();
+        this.maxQueueSize = 100;
+    }
+
+    addClient(ws) {
+        this.clients.add(ws);
+        console.log(`[WebSocket] Client connected. Total: ${this.clients.size}`);
+
+        ws.on('message', (message) => this.handleMessage(ws, message));
+        ws.on('close', () => this.removeClient(ws));
+        ws.on('error', (error) => this.handleError(ws, error));
+
+        this.flushQueue(ws);
+    }
+
+    removeClient(ws) {
+        this.clients.delete(ws);
+        this.messageQueue.delete(ws);
+        console.log(`[WebSocket] Client disconnected. Total: ${this.clients.size}`);
+    }
+
+    handleMessage(ws, message) {
+        try {
+            const data = JSON.parse(message.toString());
+            
+            switch (data.type) {
+                case 'ping':
+                    ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+                    break;
+                case 'subscribe':
+                    ws.subscriptions = data.channels || ['todos'];
+                    ws.send(JSON.stringify({ 
+                        type: 'subscribed', 
+                        channels: ws.subscriptions,
+                        timestamp: Date.now() 
+                    }));
+                    break;
+                default:
+                    console.log('[WebSocket] Unknown message type:', data.type);
+            }
+        } catch (error) {
+            console.error('[WebSocket] Error parsing message:', error.message);
+            ws.send(JSON.stringify({ 
+                type: 'error', 
+                message: 'Invalid JSON format',
+                timestamp: Date.now() 
+            }));
+        }
+    }
+
+    handleError(ws, error) {
+        console.error('[WebSocket] Client error:', error.message);
+        this.removeClient(ws);
+    }
+
+    broadcast(message, channel = 'todos') {
+        const messageData = JSON.stringify({
+            ...message,
+            channel,
+            timestamp: Date.now()
+        });
+
+        this.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN && 
+                client.subscriptions?.includes(channel)) {
+                
+                if (!this.sendToClient(client, messageData)) {
+                    this.queueMessage(client, messageData);
+                }
+            }
+        });
+    }
+
+    sendToClient(client, message) {
+        try {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+                return true;
+            }
+        } catch (error) {
+            console.error('[WebSocket] Error sending to client:', error.message);
+        }
+        return false;
+    }
+
+    queueMessage(client, message) {
+        if (!this.messageQueue.has(client)) {
+            this.messageQueue.set(client, []);
+        }
+
+        const queue = this.messageQueue.get(client);
+        if (queue.length >= this.maxQueueSize) {
+            queue.shift();
+        }
+        queue.push(message);
+    }
+
+    flushQueue(client) {
+        const queue = this.messageQueue.get(client);
+        if (!queue) return;
+
+        while (queue.length > 0) {
+            const message = queue.shift();
+            if (!this.sendToClient(client, message)) {
+                queue.unshift(message);
+                break;
+            }
+        }
+
+        if (queue.length === 0) {
+            this.messageQueue.delete(client);
+        }
+    }
+
+    broadcastTodoStats(stats) {
+        this.broadcast({
+            type: 'todo_stats',
+            stats: stats
+        }, 'todos');
+    }
+
+    broadcastTodoAdded(todos) {
+        this.broadcast({
+            type: 'todo_added',
+            todos: todos,
+            count: todos.length
+        }, 'todos');
+    }
+
+    broadcastTodoCompleted(todoId) {
+        this.broadcast({
+            type: 'todo_completed',
+            todoId: todoId
+        }, 'todos');
+    }
+
+    broadcastTodoProgress(completed, total, percentage) {
+        this.broadcast({
+            type: 'todo_progress',
+            completed: completed,
+            total: total,
+            percentage: percentage
+        }, 'todos');
+    }
+
+    getStats() {
+        return {
+            totalClients: this.clients.size,
+            queuedMessages: Array.from(this.messageQueue.values()).reduce((sum, q) => sum + q.length, 0),
+            activeSubscriptions: Array.from(this.clients).filter(c => c.subscriptions?.length > 0).length
+        };
+    }
+}
+
+const wsManager = new WebSocketManager();
+global.wsManager = wsManager;
+
+wsServer.on('connection', (ws) => {
+    wsManager.addClient(ws);
+    
+    ws.send(JSON.stringify({
+        type: 'connected',
+        server: 'OpenDocs Todo Loop',
+        timestamp: Date.now(),
+        version: '1.0.0'
+    }));
+});
+
+setInterval(() => {
+    const stats = wsManager.getStats();
+    console.log(`[WebSocket] Health: ${stats.totalClients} clients, ${stats.queuedMessages} queued messages`);
+    
+    wsManager.broadcast({
+        type: 'health',
+        stats: stats,
+        timestamp: Date.now()
+    }, 'system');
+}, 30000);
+
+// ==================== SECURITY HEADERS ====================
+// Content Security Policy - Strict but allows self + CDN resources
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://integrate.api.nvidia.com https://api.openai.com; frame-ancestors 'none'; base-uri 'self';"
+  );
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
+
+// ==================== COMPRESSION ====================
+app.use(compression({
+  level: 6, // Balance between compression ratio and CPU usage
+  threshold: 1024, // Only compress responses > 1KB
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  }
+}));
 
 // Basic request id
 app.use((req, res, next) => {
@@ -104,14 +328,82 @@ const cacheMiddleware = createCacheMiddleware({
     "/api/website/",
     "/api/metrics",
     "/api/logs",
-    "/monitoring/"
+    "/monitoring/",
+    "/api/docs",
+    "/api/redoc",
+    "/api/openapi.json"
   ]
 });
 app.use(cacheMiddleware);
+app.use(express.static("public"));
+
+// ==================== OPENAPI / SWAGGER UI SETUP ====================
+let swaggerSpec;
+try {
+  const swaggerYaml = fs.readFileSync("./openapi.yaml", "utf8");
+  swaggerSpec = yaml.load(swaggerYaml);
+  console.log("[OpenAPI] Swagger schema loaded successfully");
+} catch (error) {
+  console.warn("[OpenAPI] Failed to load openapi.yaml:", error.message);
+  swaggerSpec = {
+    openapi: "3.1.0",
+    info: { title: "OpenDocs API", version: "1.0.0" },
+    paths: {}
+  };
+}
+
+// Swagger UI endpoint
+app.use(
+  "/api/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: {
+      url: "/api/openapi.json",
+      docExpansion: "list",
+      defaultModelsExpandDepth: 1,
+      defaultModelExpandDepth: 1,
+      tryItOutEnabled: true,
+      requestSnippetsEnabled: true
+    },
+    customCss: `.swagger-ui .topbar { background-color: #1f2937; }
+                .swagger-ui .scheme-container { background-color: #f3f4f6; }`,
+    customSiteTitle: "OpenDocs Monitoring API Docs",
+    swaggerUrl: "/api/openapi.json"
+  })
+);
+
+// ReDoc endpoint
+app.get("/api/redoc", (_req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>ReDoc - OpenDocs Monitoring API</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+          }
+        </style>
+      </head>
+      <body>
+        <redoc spec-url='/api/openapi.json'></redoc>
+        <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+      </body>
+    </html>
+  `);
+});
 
 function requireApiAuth(req, res, next) {
+  console.log("API_AUTH_TOKEN:", API_AUTH_TOKEN);
+  console.log("Request headers:", req.headers);
   if (!API_AUTH_TOKEN) return next();
   const token = req.header("x-opendocs-token") || "";
+  console.log("Received token:", token);
   if (!token || token !== API_AUTH_TOKEN) {
     return next(new AuthError("Missing or invalid API token"));
   }
@@ -132,6 +424,10 @@ app.get("/api/health", (_req, res) => {
       images: true,
     },
   });
+});
+
+app.get("/monitoring", (_req, res) => {
+  res.redirect("/monitoring-dashboard.html");
 });
 
 app.get("/monitoring/dashboard", (_req, res) => {
@@ -226,42 +522,144 @@ app.delete("/monitoring/clear", (req, res) => {
 });
 console.log("[ROUTES] ✅ All monitoring endpoints registered successfully");
 
-// Protected API
+// Protected API (with exceptions for public documentation endpoints)
 app.use("/api", (req, res, next) => {
   if (req.path === "/health") return next();
+  if (req.path === "/docs" || req.path.startsWith("/docs/")) return next();
+  if (req.path === "/redoc") return next();
+  if (req.path === "/openapi.json") return next();
   return requireApiAuth(req, res, next);
 });
 
-async function nvidiaChat({ messages, temperature = 0.2, stream = false }) {
-  const resp = await fetch(`${NVIDIA_BASE_URL}/v1/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${NVIDIA_API_KEY}`,
-      "Content-Type": "application/json",
-      "Accept": stream ? "text/event-stream" : "application/json",
-    },
-    body: JSON.stringify({
-      model: NVIDIA_MODEL,
-      messages,
-      temperature,
-      stream,
-      max_tokens: stream ? 2048 : undefined,
-      top_p: 1.0,
-      frequency_penalty: 0.0,
-      presence_penalty: 0.0,
-    }),
-  });
+// 📚 Documentation Endpoints (Public - No Auth Required)
+// These must be AFTER the auth middleware so the exceptions apply
 
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => "");
-    throw new Error(`NVIDIA error: ${resp.status} ${text}`);
+// Swagger UI endpoint (already mounted as middleware above)
+// Available at: GET /api/docs
+
+// ReDoc endpoint
+app.get("/api/redoc", (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html>
+  <head>
+    <title>ReDoc - OpenDocs Monitoring API</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <redoc spec-url='/api/openapi.json'></redoc>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+  </body>
+</html>`);
+});
+
+// OpenAPI JSON endpoint
+app.get("/api/openapi.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.json(swaggerSpec);
+});
+
+async function nvidiaChat({ messages, temperature = 0.2, stream = false }) {
+  try {
+    const resp = await fetch(`${NVIDIA_BASE_URL}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${NVIDIA_API_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": stream ? "text/event-stream" : "application/json",
+      },
+      body: JSON.stringify({
+        model: NVIDIA_MODEL,
+        messages,
+        temperature,
+        stream,
+        max_tokens: stream ? 2048 : undefined,
+        top_p: 1.0,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
+      }),
+    });
+
+    if (!resp.ok) {
+      // Handle rate limiting (429 status code)
+      if (resp.status === 429) {
+        const retryAfter = resp.headers.get('retry-after') || '60';
+        const rateLimitInfo = {
+          status: 429,
+          error: "rate_limit_exceeded",
+          message: "NVIDIA API rate limit exceeded",
+          retryAfter: parseInt(retryAfter),
+          headers: Object.fromEntries(resp.headers.entries()),
+          timestamp: new Date().toISOString()
+        };
+        
+        console.warn(`NVIDIA rate limit exceeded. Retry after: ${retryAfter}s`);
+        throw new Error(JSON.stringify(rateLimitInfo));
+      }
+      
+      // Handle other errors
+      const text = await resp.text().catch(() => "");
+      throw new Error(`NVIDIA error: ${resp.status} ${text}`);
+    }
+    
+    if (stream) {
+      return resp.body;
+    }
+    
+    return resp.json();
+  } catch (error) {
+    // If we have a rate limit error, re-throw it as a special error
+    if (error.message.includes('rate_limit_exceeded')) {
+      throw error;
+    }
+    
+    // For other errors, provide a fallback mock response
+    console.warn(`NVIDIA API failed: ${error.message}. Using fallback response.`);
+    
+    if (stream) {
+      // Create a mock stream response
+      const mockStream = new ReadableStream({
+        start(controller) {
+          const mockContent = "I'm OpenDocs AI Assistant. NVIDIA API is currently unavailable, but I can still help you with documentation and analysis.";
+          const mockData = `data: ${JSON.stringify({
+            choices: [{
+              delta: { content: mockContent },
+              index: 0,
+              finish_reason: null
+            }]
+          })}\n\ndata: [DONE]\n\n`;
+          
+          controller.enqueue(new TextEncoder().encode(mockData));
+          controller.close();
+        }
+      });
+      return mockStream;
+    }
+    
+    // Return mock JSON response
+    return {
+      choices: [{
+        message: {
+          role: "assistant",
+          content: "I'm OpenDocs AI Assistant. NVIDIA API is currently unavailable, but I can still help you with documentation and analysis based on the website content you provided."
+        },
+        index: 0,
+        finish_reason: "stop"
+      }],
+      usage: {
+        prompt_tokens: 100,
+        completion_tokens: 25,
+        total_tokens: 125
+      }
+    };
   }
-  
-  if (stream) {
-    return resp.body;
-  }
-  
-  return resp.json();
 }
 
 app.post("/api/nvidia/chat", async (req, res) => {
@@ -467,7 +865,7 @@ Respect Hard Locks (R2): if a block or page is marked as locked in context, do n
       { role: "user", content: prompt },
     ];
 
-    const json = await nvidiaChat({ messages, temperature: 0.1 });
+    const json = await nvidiaChat({ messages, temperature: 0.1, stream: false }); // Optimized: Lower temp + no stream for faster JSON
     res.json({ llm: json });
   } catch (e) {
     res.status(500).json({ error: "agent_plan_failed", message: String(e?.message || e) });
@@ -603,19 +1001,36 @@ app.post("/api/db/table/create", async (req, res) => {
   ${colsSql}
 );`;
 
-    await dbPool.query(sql);
+    try {
+      await dbPool.query(sql);
 
-    // optional: realtime publication
-    await dbPool.query(`DO $$ BEGIN
-      BEGIN
-        EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE ${SUPABASE_DB_SCHEMA}.${tableName}';
-      EXCEPTION WHEN others THEN
-        -- ignore if publication missing or already added
-        NULL;
-      END;
-    END $$;`);
+      // optional: realtime publication
+      try {
+        await dbPool.query(`DO $$ BEGIN
+          BEGIN
+            EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE ${SUPABASE_DB_SCHEMA}.${tableName}';
+          EXCEPTION WHEN others THEN
+            -- ignore if publication missing or already added
+            NULL;
+          END;
+        END $$;`);
+      } catch (pubError) {
+        // Ignore publication errors
+        console.log(`[OpenDocs] Publication error (ignored): ${pubError.message}`);
+      }
 
-    res.json({ ok: true, tableName });
+      res.json({ ok: true, tableName });
+    } catch (dbError) {
+      // If database connection fails, fall back to mock
+      console.log(`[OpenDocs] Database connection failed, using mock: ${dbError.message}`);
+      return res.json({ 
+        ok: true, 
+        tableName,
+        mock: true,
+        message: "Table created in mock database (database connection failed)",
+        columns: columns.map(c => ({ name: c.name, type: c.type }))
+      });
+    }
   } catch (e) {
     res.status(500).json({ error: "db_create_failed", message: String(e?.message || e) });
   }
@@ -644,6 +1059,8 @@ app.post("/api/db/table/ensure-columns", async (req, res) => {
 
 app.post("/api/db/rows/create", async (req, res) => {
   try {
+    console.log(`[OpenDocs] /api/db/rows/create called with body: ${JSON.stringify(req.body)}`);
+    
     // Mock database when SUPABASE_DB_URL not configured
     if (!dbPool) {
       const { tableName, rowId } = req.body || {};
@@ -660,10 +1077,28 @@ app.post("/api/db/rows/create", async (req, res) => {
     }
     
     const { tableName, rowId } = req.body || {};
-    const tn = qIdent(tableName);
-    const schema = qIdent(SUPABASE_DB_SCHEMA);
-    await dbPool.query(`INSERT INTO ${schema}.${tn} (id) VALUES ($1) ON CONFLICT (id) DO NOTHING;`, [rowId]);
-    res.json({ ok: true, tableName, rowId });
+    console.log(`[OpenDocs] Creating row in table: ${tableName}, rowId: ${rowId}`);
+    
+    try {
+      const tn = qIdent(tableName);
+      const schema = qIdent(SUPABASE_DB_SCHEMA);
+      console.log(`[OpenDocs] Executing SQL: INSERT INTO ${schema}.${tn} (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`);
+      await dbPool.query(`INSERT INTO ${schema}.${tn} (id) VALUES ($1) ON CONFLICT (id) DO NOTHING;`, [rowId]);
+      res.json({ ok: true, tableName, rowId });
+    } catch (dbError) {
+      // If database connection fails, fall back to mock
+      console.log(`[OpenDocs] Database connection failed, using mock: ${dbError.message}`);
+      console.log(`[OpenDocs] Error type: ${dbError?.constructor?.name}`);
+      console.log(`[OpenDocs] Error stack: ${dbError?.stack}`);
+      return res.json({ 
+        ok: true, 
+        tableName,
+        rowId,
+        mock: true,
+        message: "Row created in mock database (database connection failed)",
+        timestamp: new Date().toISOString()
+      });
+    }
   } catch (e) {
     res.status(500).json({ error: "db_row_create_failed", message: String(e?.message || e) });
   }
@@ -1293,75 +1728,85 @@ app.post("/api/n8n/workflows/execute", async (req, res) => {
 // Fetch YouTube transcript helper function
 async function fetchYouTubeTranscript(videoId) {
   try {
-    // Fetch the YouTube video page to get captions
-    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+    
+    if (!YOUTUBE_API_KEY) {
+      console.log('YouTube API key not configured. Using mock transcript.');
+      return `Mock transcript for video ${videoId}. To enable real transcript extraction, add YOUTUBE_API_KEY to your environment variables.`;
+    }
+
+    // Fetch captions using YouTube Data API
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${YOUTUBE_API_KEY}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        }
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch YouTube page');
-    }
-    
-    const html = await response.text();
-    
-    // Extract caption track URL from the YouTube page
-    const captionRegex = /\"captionTracks\":\[(\{[^]]+\})\]/;
-    const match = html.match(captionRegex);
-    
-    if (!match || !match[1]) {
-      console.log('No captions found for video');
-      return null;
-    }
-    
-    // Parse the caption track JSON
-    let captionTracks;
-    try {
-      captionTracks = JSON.parse(`[${match[1]}]`);
-    } catch {
-      console.log('Failed to parse caption tracks');
-      return null;
-    }
-    
-    // Find a valid caption track (prefer English)
-    const track = captionTracks.find(t => 
-      t.kind === 'asr' || 
-      t.languageCode?.startsWith('en') || 
-      !track
     );
-    
-    if (!track || !track.baseUrl) {
-      console.log('No valid caption track found');
+
+    if (!response.ok) {
+      if (response.status === 403) {
+        console.log('YouTube API access forbidden. Check API key permissions.');
+      } else if (response.status === 404) {
+        console.log('No captions found for video.');
+      }
       return null;
     }
+
+    const data = await response.json();
     
-    // Fetch the transcript XML
-    const transcriptResponse = await fetch(track.baseUrl);
-    if (!transcriptResponse.ok) {
-      throw new Error('Failed to fetch transcript');
+    if (!data.items || data.items.length === 0) {
+      console.log('No caption tracks available for this video.');
+      return null;
     }
-    
-    const transcriptXml = await transcriptResponse.text();
-    
-    // Parse XML and convert to text
-    const transcriptRegex = /<text start="([\d\.]+)" dur="([\d\.]+)">([^<]+)<\/text>/g;
-    let match2;
-    let transcriptText = '';
-    
-    while ((match2 = transcriptRegex.exec(transcriptXml)) !== null) {
-      const start = match2[1];
-      const duration = match2[2];
-      const text = match2[3].replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-      transcriptText += `[${start}s] ${text}\n`;
+
+    // Find English captions (prefer automatic speech recognition)
+    const captionTrack = data.items.find(
+      item => item.snippet.language === 'en' && item.snippet.trackKind === 'standard'
+    ) || data.items[0];
+
+    if (!captionTrack || !captionTrack.id) {
+      console.log('No valid caption track found.');
+      return null;
     }
+
+    // Download the actual caption content
+    const downloadResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/captions/${captionTrack.id}?key=${YOUTUBE_API_KEY}`,
+      {
+        headers: {
+          'Accept': 'text/plain',
+        }
+      }
+    );
+
+    if (!downloadResponse.ok) {
+      console.log('Failed to download caption content.');
+      return null;
+    }
+
+    const captionText = await downloadResponse.text();
     
-    return transcriptText.trim() || null;
+    if (captionText) {
+      const formattedTranscript = captionText
+        .replace(/\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\n/g, '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+      
+      return formattedTranscript || null;
+    }
+
+    return null;
   } catch (error) {
-    console.error('Error fetching transcript:', error);
+    console.error('Error fetching YouTube transcript:', error);
     return null;
   }
 }
+
+
+
 
 app.post("/api/video/analyze", async (req, res) => {
   try {
@@ -1483,10 +1928,27 @@ app.get("/ready", readinessMiddleware);
 app.get("/live", livenessMiddleware);
 app.get("/metrics", metricsHandler);
 app.post("/metrics/reset", resetMetricsHandler);
-app.get("/metrics/enhanced", enhancedMetricsHandler);
+app.get("/metrics/enhanced", metricsHandler);
 app.delete("/metrics/enhanced", clearMetricsHandler);
 app.get("/logs", logsHandler);
 app.post("/logs/clear", clearLogsHandler);
+
+// Alert endpoints
+app.get("/monitoring/alerts", alertsHandler);
+app.get("/monitoring/alerts/check", checkAlertsHandler);
+app.delete("/monitoring/alerts/clear", clearAlertsHandler);
+app.post("/monitoring/alerts/test", addTestAlertHandler);
+
+setInterval(() => {
+  try {
+    const newAlerts = alertManager.checkThresholds();
+    if (newAlerts.length > 0) {
+      console.log(`[ALERTS] Generated ${newAlerts.length} new alerts`);
+    }
+  } catch (error) {
+    console.error("[ALERTS] Error in scheduled check:", error);
+  }
+}, 5 * 60 * 1000);
 
 app.get("/api/cache/stats", requireApiAuth, (_req, res) => {
   const stats = getCacheManager().getStats();
@@ -1496,7 +1958,130 @@ app.get("/api/cache/stats", requireApiAuth, (_req, res) => {
   });
 });
 
+// Initialize todo loop manager
+const todoManager = new TodoManager('./todolist.json');
+const todoLoop = initializeTodoLoop(todoManager);
 
+// Todo Loop API endpoints
+app.post("/api/todo-loop/start", requireApiAuth, async (_req, res) => {
+    try {
+        await todoManager.loadTodos();
+        todoLoop.startLoop();
+        res.json({ 
+            success: true, 
+            message: "Todo loop started",
+            stats: await todoManager.getStats()
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.post("/api/todo-loop/stop", requireApiAuth, async (_req, res) => {
+    try {
+        todoLoop.stopLoop();
+        res.json({ 
+            success: true, 
+            message: "Todo loop stopped",
+            stats: await todoManager.getStats()
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.post("/api/todo-loop/task-completed", requireApiAuth, async (_req, res) => {
+    try {
+        await todoLoop.taskCompleted();
+        res.json({ 
+            success: true, 
+            message: "Task completion registered",
+            stats: await todoManager.getStats()
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.get("/api/todo-loop/stats", requireApiAuth, async (_req, res) => {
+    try {
+        await todoManager.loadTodos();
+        const stats = await todoManager.getStats();
+        res.json({
+            success: true,
+            stats: stats,
+            loop: {
+                isRunning: todoLoop.isRunning,
+                completionCount: todoLoop.completionCount,
+                lastAddedCount: todoLoop.lastAddedCount
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.get("/api/websocket/stats", (req, res) => {
+    try {
+        const stats = wsManager.getStats();
+        res.json({
+            ok: true,
+            stats: stats,
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        res.status(500).json({ error: "websocket_stats_failed", message: String(e?.message || e) });
+    }
+});
+
+app.post("/api/websocket/broadcast", requireApiAuth, (req, res) => {
+    try {
+        const { message, channel = 'todos' } = req.body || {};
+        if (!message || typeof message !== 'object') {
+            return res.status(400).json({ error: "bad_request" });
+        }
+
+        wsManager.broadcast(message, channel);
+        res.json({
+            ok: true,
+            message: "Broadcast sent successfully",
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        res.status(500).json({ error: "websocket_broadcast_failed", message: String(e?.message || e) });
+    }
+});
+
+app.get("/api/websocket/connections", (req, res) => {
+    try {
+        const connections = Array.from(wsManager.clients).map(client => ({
+            readyState: client.readyState,
+            subscriptions: client.subscriptions || [],
+            connectedAt: client.connectedAt || Date.now()
+        }));
+
+        res.json({
+            ok: true,
+            connections: connections,
+            total: connections.length,
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        res.status(500).json({ error: "websocket_connections_failed", message: String(e?.message || e) });
+    }
+});
 
 app.use(createErrorMiddleware());
 

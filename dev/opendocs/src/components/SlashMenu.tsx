@@ -6,6 +6,7 @@ import {
   Network, PencilLine, ListChecks, Info, Activity, Image, 
   Video, Link, Quote, Minus, File, Sparkles
 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 
 const ITEMS: { type: BlockType; label: string; hint: string; icon: LucideIcon }[] = [
   { type: "heading1", label: "Heading 1", hint: "Big title", icon: Heading1 },
@@ -30,32 +31,102 @@ const ITEMS: { type: BlockType; label: string; hint: string; icon: LucideIcon }[
   { type: "aiPrompt", label: "AI Prompt", hint: "Generate block", icon: Sparkles },
 ];
 
-export function SlashMenu({ onSelect, onClose }: { onSelect: (t: BlockType) => void; onClose: () => void }) {
+interface SlashMenuProps {
+  onSelect: (t: BlockType) => void;
+  onClose: () => void;
+  searchTerm?: string;
+}
+
+export function SlashMenu({ onSelect, onClose, searchTerm = "" }: SlashMenuProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm) return ITEMS;
+    const term = searchTerm.toLowerCase();
+    return ITEMS.filter(
+      (it) =>
+        it.label.toLowerCase().includes(term) ||
+        it.hint.toLowerCase().includes(term) ||
+        it.type.toLowerCase().includes(term)
+    );
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (filteredItems.length === 0) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev + 1) % filteredItems.length);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev - 1 + filteredItems.length) % filteredItems.length);
+          break;
+        case "Enter":
+          e.preventDefault();
+          onSelect(filteredItems[selectedIndex].type);
+          break;
+        case "Escape":
+          e.preventDefault();
+          onClose();
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [filteredItems, selectedIndex, onSelect, onClose]);
+
   return (
     <div className="mt-2 w-[min(520px,90vw)] rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
       <div className="mb-2 flex items-center justify-between px-1">
-        <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Insert block</div>
-        <button type="button" className="rounded px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900" onClick={onClose}>
+        <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          {searchTerm ? `Search: "${searchTerm}"` : "Insert block"}
+        </div>
+        <button
+          type="button"
+          className="rounded px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
+          onClick={onClose}
+        >
           Esc
         </button>
       </div>
-      <div className="grid grid-cols-1 gap-1">
-        {ITEMS.map((it) => (
-    <button
-      type="button"
-      key={it.type}
-      className="flex items-center gap-3 rounded-md px-2 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900 transition-colors"
-      onClick={() => onSelect(it.type)}
-    >
-            <div className="flex h-8 w-8 items-center justify-center rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 shrink-0">
-              <it.icon className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-            </div>
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <span className="font-medium truncate">{it.label}</span>
-              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate uppercase tracking-tight">{it.hint}</span>
-            </div>
-          </button>
-        ))}
+      <div className="grid grid-cols-1 gap-1 max-h-[400px] overflow-y-auto">
+        {filteredItems.length === 0 ? (
+          <div className="px-2 py-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
+            No blocks found
+          </div>
+        ) : (
+          filteredItems.map((it, index) => (
+            <button
+              type="button"
+              key={it.type}
+              className={`flex items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors ${
+                index === selectedIndex
+                  ? "bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                  : "text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+              onClick={() => onSelect(it.type)}
+              onMouseEnter={() => setSelectedIndex(index)}
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 shrink-0">
+                <it.icon className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+              </div>
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <span className="font-medium truncate">{it.label}</span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate uppercase tracking-tight">
+                  {it.hint}
+                </span>
+              </div>
+            </button>
+          ))
+        )}
       </div>
     </div>
   );

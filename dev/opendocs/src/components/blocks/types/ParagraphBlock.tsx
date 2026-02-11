@@ -9,7 +9,7 @@ export function ParagraphBlockView({
   block: ParagraphBlock;
   disabled: boolean;
   onUpdate: (text: string) => void;
-  onSlash: () => void;
+  onSlash: (searchTerm: string) => void;
 }) {
   return (
     <textarea
@@ -19,7 +19,7 @@ export function ParagraphBlockView({
       onKeyDown={(e) => {
         if (e.key === "/" && (e.currentTarget.value ?? "") === "") {
           e.preventDefault();
-          onSlash();
+          onSlash(""); // Empty search term for initial slash
         }
       }}
       placeholder="Write… (type / to insert)"

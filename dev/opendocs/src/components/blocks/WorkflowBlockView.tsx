@@ -84,12 +84,12 @@ export function WorkflowBlockView({
         id: node.id,
         x: node.position.x,
         y: node.position.y,
-        label: node.data?.label || (originalNode?.label || "Untitled"),
-        color: node.style?.background || originalNode?.color,
+        label: String(node.data?.label || originalNode?.label || "Untitled"),
+        color: typeof node.style?.background === 'string' ? node.style.background : typeof node.style?.background === 'number' ? String(node.style.background) : originalNode?.color,
       };
     });
 
-    onUpdate({ data: { ...data, nodes: updatedNodes } });
+    onUpdate({ type: "workflow", data: { ...data, nodes: updatedNodes } });
   }, [nodes, disabled, data, onUpdate]);
 
   // Handle new connections
@@ -112,7 +112,7 @@ export function WorkflowBlockView({
       };
 
       const updatedEdges = [...(data.edges || []), newEdge];
-      onUpdate({ data: { ...data, edges: updatedEdges } });
+      onUpdate({ type: "workflow", data: { ...data, edges: updatedEdges } });
       resolve();
     }),
     [disabled, data, onUpdate, setEdges],
@@ -120,11 +120,26 @@ export function WorkflowBlockView({
 
   // Sync nodes/edges with data when they change
   useMemo(() => {
-    if (JSON.stringify(nodes.map(n => ({ id: n.id, position: n.position, data: n.data }))) !== 
-        JSON.stringify(initialNodes.map(n => ({ id: n.id, position: n.position, data: n.data })))) {
-      // Don't trigger update on first render
+    if (disabled) return;
+    
+    const currentNodes = nodes.map(n => ({ id: n.id, position: n.position, data: n.data }));
+    const initialNodesData = initialNodes.map(n => ({ id: n.id, position: n.position, data: n.data }));
+    
+    if (JSON.stringify(currentNodes) !== JSON.stringify(initialNodesData)) {
+      const updatedNodes = nodes.map((node) => {
+        const originalNode = data.nodes?.find((n) => n.id === node.id);
+        return {
+          id: node.id,
+          x: node.position.x,
+          y: node.position.y,
+          label: String(node.data?.label || originalNode?.label || "Untitled"),
+          color: typeof node.style?.background === 'string' ? node.style.background : typeof node.style?.background === 'number' ? String(node.style.background) : originalNode?.color,
+        };
+      });
+
+      onUpdate({ type: "workflow", data: { ...data, nodes: updatedNodes } });
     }
-  }, [initialNodes]);
+  }, [nodes, initialNodes, disabled, data, onUpdate]);
 
   return (
     <div className="rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800" style={{ height: "500px", width: "100%" }}>

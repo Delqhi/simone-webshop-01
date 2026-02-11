@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, FileText, Folder, FolderPlus, Plus, Sun, Moon, Trash2, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Folder, FolderPlus, Plus, Sun, Moon, Trash2, Search, PanelLeft, PanelLeftClose } from "lucide-react";
 import { useDocsStore } from "@/store/useDocsStore";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
@@ -8,18 +8,58 @@ import { cn } from "@/utils/cn";
 export function Sidebar() {
   const { state, actions } = useDocsStore();
   const [filter, setFilter] = useState("");
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const showSidebar = !isCollapsed || isHovered;
 
   if (!state || !state.folders || !state.pages) {
-    return <aside className="flex h-full w-[320px] flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 p-4 text-xs italic text-zinc-500">Initializing structure…</aside>;
+    return (
+      <aside className="flex h-full w-[60px] flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="flex h-12 items-center justify-center border-b border-zinc-200 dark:border-zinc-800">
+          <span className="text-indigo-600 font-bold">OD</span>
+        </div>
+      </aside>
+    );
   }
 
   const isDark = state.theme === "dark";
 
+  if (!showSidebar) {
+    return (
+      <aside 
+        className="flex h-full w-[60px] flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 transition-all duration-300"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className="flex h-12 items-center justify-center border-b border-zinc-200 dark:border-zinc-800">
+          <span className="text-indigo-600 font-bold text-lg">OD</span>
+        </div>
+        <div className="flex-1 flex flex-col items-center py-4 gap-2">
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(false)}
+            className="p-2 rounded-md text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title="Expand sidebar"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeft className="h-5 w-5" />
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="flex h-full w-[320px] flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+    <aside 
+      className="flex h-full w-[320px] flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 transition-all duration-300"
+      onMouseLeave={() => {
+        if (isCollapsed) setIsHovered(false);
+      }}
+    >
       <div className="flex items-center justify-between px-3 py-3 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-sm">
             <span className="text-white font-bold text-sm">OD</span>
           </div>
           <div>
@@ -28,29 +68,38 @@ export function Sidebar() {
           </div>
         </div>
         
-        {/* Theme Toggle with explicit Light/Dark icons */}
-        <button
-          type="button"
-          className={"flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all " + 
-            (isDark 
-              ? "bg-indigo-950 text-indigo-200 hover:bg-indigo-900 border border-indigo-800" 
-              : "bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200"
+        <div className="flex items-center gap-1">
+          {/* Professional Dark/Light Toggle */}
+          <button
+            type="button"
+            onClick={() => actions.setTheme(isDark ? "light" : "dark")}
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-md border transition-all duration-200",
+              "hover:bg-zinc-100 dark:hover:bg-zinc-800",
+              isDark 
+                ? "border-zinc-700 bg-zinc-800 text-zinc-300" 
+                : "border-zinc-200 bg-white text-zinc-600"
             )}
-          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          onClick={() => actions.setTheme(isDark ? "light" : "dark")}
-        >
-          {isDark ? (
-            <>
-              <Moon className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Dark</span>
-            </>
-          ) : (
-            <>
-              <Sun className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Light</span>
-            </>
-          )}
-        </button>
+            title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {isDark ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
+          </button>
+
+          {/* Collapse Button */}
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(true)}
+            className="ml-1 p-1.5 rounded-md text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div className="px-3 pb-3">

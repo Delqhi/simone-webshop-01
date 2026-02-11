@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { useDocsStore } from "@/store/useDocsStore";
-import { Sparkles, MessageSquareText, ClipboardCheck, FilePlus2, Database, SunMoon, Network, PencilLine, Activity, Search } from "lucide-react";
+import { Sparkles, MessageSquareText, ClipboardCheck, FilePlus2, Database, SunMoon, Network, PencilLine, Activity, Search, Infinity } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export type CommandItem = {
@@ -47,11 +47,12 @@ export function CommandPalette({
       },
       {
         id: "audit",
-        title: "Content Coherence Audit",
+        title: "Content Audit",
         hint: "Audit",
         icon: ClipboardCheck,
         run: onOpenAudit,
       },
+
       {
         id: "page",
         title: "Create new document",

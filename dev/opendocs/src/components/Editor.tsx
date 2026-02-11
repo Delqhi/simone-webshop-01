@@ -4,15 +4,22 @@ import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { SlashMenu } from "@/components/SlashMenu";
 import { PageHeader } from "@/components/PageHeader";
 import type { BlockType, HeadingBlock, ParagraphBlock, DocBlock } from "@/types/docs";
-import { Sparkles, Plus, ChevronDown } from "lucide-react";
+import { Sparkles, Plus, ChevronDown, GripVertical } from "lucide-react";
 
 export function Editor() {
-  const { state, actions } = useDocsStore();
-  const page = state.selectedPageId ? state.pages[state.selectedPageId] : undefined;
-  const dark = state.theme === "dark";
+  const selectedPageId = useDocsStore((s) => s.state.selectedPageId);
+  const pages = useDocsStore((s) => s.state.pages);
+  const theme = useDocsStore((s) => s.state.theme);
+  const actions = useDocsStore((s) => s.actions);
+  
+  const page = selectedPageId ? pages[selectedPageId] : undefined;
+  const dark = theme === "dark";
 
   const [slashBlockId, setSlashBlockId] = useState<string | null>(null);
   const [showSlashAtEnd, setShowSlashAtEnd] = useState(false);
+  const [slashSearchTerm, setSlashSearchTerm] = useState("");
+  const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
+  const [dragOverBlockId, setDragOverBlockId] = useState<string | null>(null);
 
   const blocks = page?.blocks ?? [];
 
@@ -25,16 +32,17 @@ export function Editor() {
     if (!page) return;
     const targetId = afterId ?? blocks.at(-1)?.id ?? null;
     const id = actions.addBlockAfter(page.id, targetId, type);
-    
+
     // Set initial content for specific block types
     if (type === "heading2") {
       const headingData: Partial<HeadingBlock> = { text: "New section" };
       actions.updateBlock(page.id, id, headingData);
     }
     if (type === "paragraph") actions.updateBlock(page.id, id, { text: "" } as Partial<ParagraphBlock>);
-    
+
     setSlashBlockId(null);
     setShowSlashAtEnd(false);
+    setSlashSearchTerm("");
   };
 
   if (!page) {
@@ -46,12 +54,38 @@ export function Editor() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-8">
+    <div className="mx-auto w-full max-w-5xl px-6 py-4">
       <PageHeader />
 
-      <div className="space-y-4">
+      <div className="space-y-1">
         {blocks.map((b, idx) => (
-          <div key={b.id}>
+          <div 
+            key={b.id} 
+            className={`group relative transition-all ${dragOverBlockId === b.id ? 'bg-indigo-50/50 dark:bg-indigo-950/30 rounded-lg' : ''}`}
+            draggable
+            onDragStart={() => setDraggedBlockId(b.id)}
+            onDragEnd={() => {
+              setDraggedBlockId(null);
+              setDragOverBlockId(null);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (draggedBlockId && draggedBlockId !== b.id) {
+                setDragOverBlockId(b.id);
+              }
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (draggedBlockId && draggedBlockId !== b.id) {
+                actions.reorderBlocks(page.id, draggedBlockId, b.id);
+                setDraggedBlockId(null);
+                setDragOverBlockId(null);
+              }
+            }}
+          >
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing">
+              <GripVertical className="h-5 w-5 text-zinc-400" />
+            </div>
             <BlockRenderer
               block={b}
               dark={dark}
@@ -66,7 +100,10 @@ export function Editor() {
               onDelete={() => actions.deleteBlock(page.id, b.id)}
               onMove={(dir) => actions.moveBlock(page.id, b.id, dir)}
               onToggleLock={() => actions.toggleBlockLock(page.id, b.id)}
-              onSlash={() => setSlashBlockId(b.id)}
+              onSlash={(searchTerm) => {
+                setSlashBlockId(b.id);
+                setSlashSearchTerm(searchTerm);
+              }}
             />
 
             {/* SlashMenu after specific block */}
@@ -74,8 +111,12 @@ export function Editor() {
               <div className="relative">
                 <div className="absolute left-0 right-0 z-50">
                   <SlashMenu
-                    onClose={() => setSlashBlockId(null)}
+                    onClose={() => {
+                      setSlashBlockId(null);
+                      setSlashSearchTerm("");
+                    }}
                     onSelect={(t: BlockType) => handleAddBlock(t, b.id)}
+                    searchTerm={slashSearchTerm}
                   />
                 </div>
               </div>
@@ -88,8 +129,12 @@ export function Editor() {
           <div className="relative">
             <div className="absolute left-0 right-0 z-50">
               <SlashMenu
-                onClose={() => setShowSlashAtEnd(false)}
+                onClose={() => {
+                  setShowSlashAtEnd(false);
+                  setSlashSearchTerm("");
+                }}
                 onSelect={(t: BlockType) => handleAddBlock(t)}
+                searchTerm={slashSearchTerm}
               />
             </div>
           </div>
@@ -97,7 +142,7 @@ export function Editor() {
       </div>
 
       {/* Block Creation Toolbar - Always visible at bottom */}
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         {/* Quick Add Buttons */}
         <div className="flex items-center gap-2">
           <button

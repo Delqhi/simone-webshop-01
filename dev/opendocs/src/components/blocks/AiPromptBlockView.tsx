@@ -82,7 +82,7 @@ export function AiPromptBlockView({
              onUpdate({ prompt: e.target.value });
            }}
            placeholder="Ask AI to generate, transform, or analyze content for this document…"
-           className="min-h-[100px] w-full resize-y rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 disabled:opacity-70"
+           className="min-h-[100px] w-full resize-y bg-white p-3 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 disabled:opacity-70"
          />
       </div>
 
@@ -92,7 +92,7 @@ export function AiPromptBlockView({
           type="button"
           disabled={disabled || loading || !block.prompt.trim()}
           onClick={handleExecutePrompt}
-          className="flex items-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 bg-indigo-600 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Send className="h-3.5 w-3.5" />
           {loading ? "Executing…" : "Execute Prompt"}
@@ -101,7 +101,7 @@ export function AiPromptBlockView({
           <button
             type="button"
             onClick={onDelete}
-            className="rounded-md p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+            className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
             title="Delete block"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -115,7 +115,7 @@ export function AiPromptBlockView({
            <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
              Result
            </div>
-          <div className="relative rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="relative bg-zinc-50 p-3 dark:bg-zinc-900">
             <pre className="whitespace-pre-wrap text-xs text-zinc-700 dark:text-zinc-200 font-sans">
               {block.result}
             </pre>
@@ -137,7 +137,7 @@ export function AiPromptBlockView({
 
       {/* Loading State */}
       {loading && (
-        <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="bg-zinc-50 p-3 dark:bg-zinc-900">
           <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
             <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
             Processing your prompt…

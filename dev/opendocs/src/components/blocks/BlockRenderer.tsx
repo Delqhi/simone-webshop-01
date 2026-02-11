@@ -31,10 +31,9 @@ export function BlockRenderer({
   onDelete: () => void;
   onMove: (dir: "up" | "down") => void;
   onToggleLock: () => void;
-  onSlash: () => void;
+  onSlash: (searchTerm: string) => void;
 }) {
-  const { state } = useDocsStore();
-  const pageId = state.selectedPageId || "";
+  const pageId = useDocsStore((s) => s.state.selectedPageId) || "";
   const [chatOpen, setChatOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -104,7 +103,7 @@ export function BlockRenderer({
 
     content = (
       <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <input
           disabled={disabled}
           value={block.text}
@@ -115,26 +114,31 @@ export function BlockRenderer({
     );
   } else if (block.type === "paragraph") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <textarea
           disabled={disabled}
           value={block.text}
-          onChange={(e) => onUpdate({ text: e.target.value })}
-          onKeyDown={(e) => {
-            if (e.key === "/" && (e.currentTarget.value ?? "") === "") {
-              e.preventDefault();
-              onSlash();
+          onChange={(e) => {
+            const newValue = e.target.value;
+            // Check if user typed "/" as the first character
+            if (newValue.startsWith("/") && (block.text ?? "") === "") {
+              const searchTerm = newValue.slice(1); // Remove the "/" prefix
+              onSlash(searchTerm);
+              // Keep the text as is for now, it will be cleared when block is selected
+              onUpdate({ text: newValue });
+            } else {
+              onUpdate({ text: newValue });
             }
           }}
           placeholder="Write… (type / on empty block to insert)"
-          className="min-h-[72px] w-full resize-y rounded-md border border-zinc-200 bg-white p-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
+          className="min-h-[72px] w-full resize-y border-0 bg-transparent p-2 text-sm text-zinc-900 outline-none dark:text-zinc-100"
         />
       </div>
     );
   } else if (block.type === "code") {
     content = (
-      <div className={`p-3 ${frame}`}>
+      <div className={`p-3 ${frame} group`}>
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <input
@@ -170,8 +174,8 @@ export function BlockRenderer({
     );
   } else if (block.type === "callout") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <div className="mb-2 flex items-center gap-2">
           <select
             disabled={disabled}
@@ -204,8 +208,8 @@ export function BlockRenderer({
   } else if (block.type === "checklist") {
     const checklistBlock = block as ChecklistBlock;
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <div className="space-y-2">
           {checklistBlock.items.map((it, idx) => (
             <div key={it.id} className="flex items-center gap-2">
@@ -246,36 +250,36 @@ export function BlockRenderer({
     content = <TableEditor block={block} disabled={disabled} frame={frame} toolbar={toolbar} onUpdate={onUpdate} />;
   } else if (block.type === "database") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <DatabaseBlockView block={block} disabled={disabled} onUpdate={onUpdate} />
       </div>
     );
   } else if (block.type === "workflow") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <WorkflowBlockView block={block} disabled={disabled} onUpdate={onUpdate} />
       </div>
     );
   } else if (block.type === "draw") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <DrawBlockView block={block} disabled={disabled} onUpdate={onUpdate} />
       </div>
     );
   } else if (block.type === "n8n") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <N8nBlockView block={block} disabled={disabled} onUpdate={onUpdate} />
       </div>
     );
   } else if (block.type === "aiPrompt") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <AiPromptBlockView
           pageId={pageId}
           block={block}
@@ -287,8 +291,8 @@ export function BlockRenderer({
     );
   } else if (block.type === "mermaid") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <textarea
           disabled={disabled}
           value={block.code}
@@ -302,8 +306,8 @@ export function BlockRenderer({
     );
   } else if (block.type === "quote") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <textarea
           disabled={disabled}
           value={block.text}
@@ -314,15 +318,15 @@ export function BlockRenderer({
     );
   } else if (block.type === "divider") {
     content = (
-      <div className={`p-3 ${frame}`}>
+      <div className={`p-3 ${frame} group`}>
         <div className="flex items-center justify-between">{toolbar}</div>
         <div className="my-3 h-px w-full bg-zinc-200 dark:bg-zinc-800" />
       </div>
     );
   } else if (block.type === "image") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <input
           disabled={disabled}
           value={block.url}
@@ -341,8 +345,8 @@ export function BlockRenderer({
     );
   } else if (block.type === "video") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <VideoBlockView
           block={block}
           disabled={disabled}
@@ -352,8 +356,8 @@ export function BlockRenderer({
     );
   } else if (block.type === "link") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <input
           disabled={disabled}
           value={block.url}
@@ -365,8 +369,8 @@ export function BlockRenderer({
     );
   } else if (block.type === "file") {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <div className="flex items-center gap-2">
           <input
             disabled={disabled}
@@ -386,8 +390,8 @@ export function BlockRenderer({
     );
   } else {
     content = (
-      <div className={`p-3 ${frame}`}>
-        <div className="mb-2 flex items-center justify-between">{toolbar}</div>
+      <div className={`p-3 ${frame} group`}>
+        <div className="mb-1 flex items-center justify-between">{toolbar}</div>
         <div className="text-sm text-zinc-600 dark:text-zinc-300">Unsupported block type: {(block as DocBlock).type}</div>
       </div>
     );
@@ -448,28 +452,6 @@ function summarizeBlock(block: DocBlock): string {
     default:
       return `Block type: ${(block as DocBlock).type}`;
   }
-}
-
-function toEmbedUrl(url: string): string | null {
-  if (!url) return null;
-  try {
-    const u = new URL(url);
-    if (u.hostname.includes("youtube.com")) {
-      const id = u.searchParams.get("v");
-      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
-    }
-    if (u.hostname === "youtu.be") {
-      const id = u.pathname.split("/").filter(Boolean)[0];
-      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
-    }
-    if (u.hostname.includes("vimeo.com")) {
-      const id = u.pathname.split("/").filter(Boolean)[0];
-      return id ? `https://player.vimeo.com/video/${id}` : null;
-    }
-  } catch {
-    return null;
-  }
-  return null;
 }
 
 function TableEditor({

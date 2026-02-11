@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDocsStore } from "@/store/useDocsStore";
 import { IconPicker, RenderDocIcon } from "@/components/ui/IconPicker";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, ChevronRight, Home } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export function PageHeader() {
@@ -12,6 +12,46 @@ export function PageHeader() {
   if (!page) return null;
 
   const hasCover = !!page.cover;
+
+  // Build breadcrumb path
+  const getBreadcrumbPath = () => {
+    const path: Array<{ id: string; name: string; type: 'folder' | 'page' }> = [];
+    
+    // Find which folder contains this page
+    let currentFolderId: string | null = null;
+    for (const [fid, folder] of Object.entries(state.folders)) {
+      if (folder.pageIds.includes(page.id)) {
+        currentFolderId = fid;
+        break;
+      }
+    }
+
+    // Build path from root to current
+    while (currentFolderId) {
+      const folder = state.folders[currentFolderId];
+      if (!folder) break;
+      
+      path.unshift({
+        id: currentFolderId,
+        name: folder.name,
+        type: 'folder'
+      });
+
+      // Find parent folder
+      let parentId: string | null = null;
+      for (const [fid, f] of Object.entries(state.folders)) {
+        if (f.folderIds.includes(currentFolderId)) {
+          parentId = fid;
+          break;
+        }
+      }
+      currentFolderId = parentId;
+    }
+
+    return path;
+  };
+
+  const breadcrumbPath = getBreadcrumbPath();
 
   return (
     <div className="group relative mb-8">
@@ -47,6 +87,34 @@ export function PageHeader() {
       </div>
 
       <div className="px-1">
+        {/* Breadcrumb Navigation */}
+        <nav className="mb-4 flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+          <button
+            type="button"
+            onClick={() => actions.selectPage?.(state.rootFolderId)}
+            className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            <Home className="h-3.5 w-3.5" />
+            <span className="text-xs">Home</span>
+          </button>
+          
+          {breadcrumbPath.map((item, index) => (
+            <div key={item.id} className="flex items-center gap-1.5">
+              <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
+              <button
+                type="button"
+                onClick={() => actions.toggleFolderExpanded?.(item.id)}
+                className="rounded px-1.5 py-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <span className="text-xs font-medium">{item.name}</span>
+              </button>
+            </div>
+          ))}
+          
+          <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
+          <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{page.title}</span>
+        </nav>
+
         {/* Page Icon */}
         <div className="relative -mt-10 mb-4 inline-block">
           <button

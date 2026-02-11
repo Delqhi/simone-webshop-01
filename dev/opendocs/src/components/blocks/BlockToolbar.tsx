@@ -31,9 +31,11 @@ export function BlockToolbar({
       <div className="flex h-7 items-center rounded-lg border border-zinc-200 bg-white p-0.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         {/* AI Chat Button */}
         <button
+          type="button"
           onClick={onChat}
           className="flex h-6 w-6 items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 hover:text-indigo-600 transition-colors"
           title="AI Block Chat"
+          aria-label="AI Block Chat"
         >
           <BotMessageSquare className="h-3.5 w-3.5" />
         </button>
@@ -103,8 +105,11 @@ export function BlockToolbar({
             <div className="mx-0.5 h-3 w-px bg-zinc-200 dark:bg-zinc-800" />
             {block.type === "table" && onConvert && (
               <button
+                type="button"
                 onClick={onConvert}
                 className="flex h-6 items-center gap-1.5 px-1.5 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/30 text-[10px] font-bold uppercase tracking-tight text-indigo-600 dark:text-indigo-400"
+                title="Convert to Database"
+                aria-label="Convert table to database block"
               >
                 DB
               </button>

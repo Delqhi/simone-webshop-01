@@ -75,8 +75,10 @@ export type DocsActions = {
   updateBlock: (pageId: string, blockId: string, patch: Partial<DocBlock>) => void;
   deleteBlock: (pageId: string, blockId: string) => void;
   moveBlock: (pageId: string, blockId: string, direction: "up" | "down") => void;
+  reorderBlocks: (pageId: string, draggedBlockId: string, targetBlockId: string) => void;
   toggleBlockLock: (pageId: string, blockId: string) => void;
   convertTableToDatabase: (pageId: string, blockId: string) => void;
+  updatePageContent: (pageId: string, blocks: DocBlock[]) => void;
   setTheme: (theme: "light" | "dark") => void;
   clearAllData: () => void;
 };
@@ -113,6 +115,9 @@ function defaultDatabaseData(): DatabaseBlockData {
       { id: tableViewId, name: "Table", type: "table" },
       { id: kanbanViewId, name: "Kanban", type: "kanban", groupByPropertyId: statusPropId },
       { id: graphViewId, name: "Graph", type: "graph" },
+      { id: nanoid(), name: "Calendar", type: "calendar" },
+      { id: nanoid(), name: "Timeline", type: "timeline" },
+      { id: nanoid(), name: "Gallery", type: "gallery" },
     ],
     activeViewId: tableViewId,
     remote: { provisioning: "idle", sync: "off" },
@@ -497,6 +502,26 @@ export const useDocsStore = create<DocsStore>()((set) => {
         }
       },
 
+      updatePageContent: (pageId, blocks) => {
+        set((s) => {
+          const page = s.state.pages[pageId];
+          if (!page) return s;
+          const nextState: DocsState = { 
+            ...s.state, 
+            pages: { 
+              ...s.state.pages, 
+              [pageId]: { 
+                ...page, 
+                blocks: blocks as DocBlock[], 
+                updatedAt: now() 
+              } 
+            } 
+          };
+          persist(nextState);
+          return { state: nextState };
+        });
+      },
+
       moveBlock: (pageId, blockId, direction) => {
         set((s) => {
           const page = s.state.pages[pageId];
@@ -512,6 +537,27 @@ export const useDocsStore = create<DocsStore>()((set) => {
           const blocks = [...page.blocks];
           const [moved] = blocks.splice(idx, 1);
           blocks.splice(nextIdx, 0, moved);
+
+          const nextState: DocsState = { ...s.state, pages: { ...s.state.pages, [pageId]: { ...page, blocks, updatedAt: now() } } };
+          persist(nextState);
+          return { state: nextState };
+        });
+      },
+
+      reorderBlocks: (pageId, draggedBlockId, targetBlockId) => {
+        set((s) => {
+          const page = s.state.pages[pageId];
+          if (!page) return s;
+          
+          const draggedIdx = page.blocks.findIndex((b) => b.id === draggedBlockId);
+          const targetIdx = page.blocks.findIndex((b) => b.id === targetBlockId);
+          
+          if (draggedIdx < 0 || targetIdx < 0) return s;
+          if (page.blocks[draggedIdx]?.locked) return s;
+
+          const blocks = [...page.blocks];
+          const [moved] = blocks.splice(draggedIdx, 1);
+          blocks.splice(targetIdx, 0, moved);
 
           const nextState: DocsState = { ...s.state, pages: { ...s.state.pages, [pageId]: { ...page, blocks, updatedAt: now() } } };
           persist(nextState);

@@ -25,12 +25,17 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 2000,
+    chunkSizeWarningLimit: 1000, // Reduced from 2000 to catch large chunks earlier
     reportCompressedSize: false,
-    minify: false,
+    minify: 'esbuild', // Optimized: Enable minification for smaller bundle size
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'zustand'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-slot', 'lucide-react', 'clsx', 'tailwind-merge'],
+          charts: ['recharts'], // If used
+          editor: ['@excalidraw/excalidraw'], // Separate heavy editor deps
+        },
       },
     },
   },
