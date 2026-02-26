@@ -2,6 +2,18 @@
 
 Stand: **26. Februar 2026**
 
+## Cloudflare Production
+
+- Runtime: **Cloudflare Workers**
+- Canonical deployment record: `CLOUDFLARE.md`
+- Live URL: `https://delqhi.com`
+- Deploy command:
+
+```bash
+cd /Users/jeremy/dev/projects/family-projects/simone-webshop-01
+pnpm deploy:cloudflare
+```
+
 ## Wahrheitsprinzip (keine Fake-Claims)
 
 Dieses Repository behauptet **nicht** blind "weltbester Shop".
