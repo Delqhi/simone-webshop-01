@@ -1,0 +1,12 @@
+{
+  "name": "@simone/workers-edge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"supabase edge functions are runtime sources\"",
+    "lint": "echo \"no edge linter configured\"",
+    "typecheck": "echo \"typecheck via supabase CLI not wired\"",
+    "test": "echo \"no edge tests yet\""
+  }
+}

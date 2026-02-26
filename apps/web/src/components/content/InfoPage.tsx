@@ -1,0 +1,32 @@
+import type { ReactNode } from 'react'
+
+type InfoSection = {
+  title: string
+  body: ReactNode
+}
+
+type InfoPageProps = {
+  title: string
+  intro: string
+  sections: InfoSection[]
+}
+
+export function InfoPage({ title, intro, sections }: InfoPageProps) {
+  return (
+    <main className="shell-container py-12">
+      <header className="mb-8 max-w-3xl">
+        <h1 className="text-4xl">{title}</h1>
+        <p className="mt-3 text-base leading-7 text-brand-text-muted">{intro}</p>
+      </header>
+
+      <div className="space-y-4">
+        {sections.map((section) => (
+          <section key={section.title} className="panel p-5">
+            <h2 className="text-2xl">{section.title}</h2>
+            <div className="mt-2 text-sm leading-7 text-brand-text-muted">{section.body}</div>
+          </section>
+        ))}
+      </div>
+    </main>
+  )
+}

@@ -1,12 +1,37 @@
 {
-  "dependencies": {
-    "node-fetch": "^3.3.2",
-    "tesseract.js": "^7.0.0",
-    "ws": "^8.19.0"
+  "name": "simone-micro-commerce-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.28.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "workers/*",
+    "tests/*"
+  ],
+  "scripts": {
+    "dev": "pnpm -r --parallel --if-present dev",
+    "dev:web": "pnpm --filter @simone/web dev",
+    "dev:api": "cd apps/api && go run ./cmd/api",
+    "dev:worker": "cd apps/api && go run ./cmd/worker",
+    "build": "pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test && pnpm test:api",
+    "test:api": "node scripts/test-api-essential.mjs",
+    "test:api:full": "cd apps/api && go test ./...",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "guard:lines": "node scripts/guard-lines.mjs",
+    "guard:baseline": "node scripts/guard-baseline-empty.mjs",
+    "guard:complexity": "node scripts/guard-complexity.mjs",
+    "check:migrations": "node scripts/migration-audit.mjs",
+    "check:fallbacks": "node scripts/check-prod-fallbacks.mjs",
+    "check:routes": "node scripts/check-web-routes.mjs",
+    "check:env:live": "node scripts/check-live-env.mjs",
+    "smoke:go-live": "node scripts/go-live-smoke.mjs",
+    "go-live:today": "pnpm run check:env:live -- --with-smoke && pnpm run ci && pnpm smoke:go-live",
+    "ci": "pnpm lint && pnpm build && pnpm typecheck && pnpm guard:lines && pnpm guard:baseline && pnpm guard:complexity && pnpm check:migrations && pnpm check:routes && pnpm test"
   },
-  "devDependencies": {
-    "@types/node": "^25.1.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

@@ -1,0 +1,18 @@
+# import config
+packagefile testing=/Users/jeremy/Library/Caches/go-build/4e/4ef74d58fb2eceaca44a6d89469396716f108d5ecfae7f1c1abdbb87ced3d8da-d
+packagefile context=/Users/jeremy/Library/Caches/go-build/19/19ea0e127febb53961d2005ff16ec7c7d8c776e8bc5d2282e806b1c00c12a620-d
+packagefile database/sql=/Users/jeremy/Library/Caches/go-build/6d/6d480316214848210d9d36957dc2b0c185d0626436eb1335c3cac6179ee06f8c-d
+packagefile encoding/json=/Users/jeremy/Library/Caches/go-build/5e/5e2f63840f223ab283f2b299cd8020c7a2d2768b54480b31a47de1fa5484aa4a-d
+packagefile errors=/Users/jeremy/Library/Caches/go-build/d4/d4055bc0b360be4996991795d47188d2ebc54dae9bc4baa937713e44dc0b29f4-d
+packagefile fmt=/Users/jeremy/Library/Caches/go-build/e1/e116fe6feb096ea8e4e11c42e936eb8570814748b6014810320fe429fb6b30a9-d
+packagefile github.com/gin-gonic/gin=/Users/jeremy/Library/Caches/go-build/77/7729e04a230a0ba5a4e57e935338e63b118de3e618da325d6fdb945f37e4bfbb-d
+packagefile github.com/google/uuid=/Users/jeremy/Library/Caches/go-build/91/91dfb9814edef01eedee06f83227e40d11678285d8efc64a7d9e84859166f0cc-d
+packagefile github.com/jackc/pgx/v5=/Users/jeremy/Library/Caches/go-build/9a/9aec3cf46e3316fd9011374fae96b76272d4ac9512a3886a7f272245ae2623eb-d
+packagefile github.com/jackc/pgx/v5/pgxpool=/Users/jeremy/Library/Caches/go-build/27/271d29ffd8ed646c197d8a3fa7754cca535a14f6048231ca27f1a9eba7b1e621-d
+packagefile math=/Users/jeremy/Library/Caches/go-build/83/83e714aed7f0c264985683da07c98e511b07e3efc53075d1278351edebc8186c-d
+packagefile net/http=/Users/jeremy/Library/Caches/go-build/51/5159301ae84e853c114369bd862988ea3cf6e7963c091f9c32cfd0236a1590fb-d
+packagefile net/url=/Users/jeremy/Library/Caches/go-build/ef/ef793a8ac68f33eec4e38f4b066fe218131b392e095e23b4f4d8def258e31489-d
+packagefile regexp=/Users/jeremy/Library/Caches/go-build/3a/3ad6d5868e2e1e58ec7bf6332e22b1339e58da0657113bbb01d8f94d907f1bab-d
+packagefile strconv=/Users/jeremy/Library/Caches/go-build/5e/5e1a7da1ba7d63efbf3bf824125a215331502112b9feebeda50738257e783bba-d
+packagefile strings=/Users/jeremy/Library/Caches/go-build/f7/f741489f75c09e4263c34c4a4434386a2307ad0030c02232c5cbbedcbab51d5c-d
+packagefile time=/Users/jeremy/Library/Caches/go-build/d6/d692589084b018bd1d568a956a362c6ec607b11ff651763eae6d69e4a3a3a054-d

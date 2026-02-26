@@ -1,0 +1,739 @@
+openapi: 3.1.0
+info:
+  title: Simone Micro-Commerce API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+paths:
+  /catalog/products:
+    get:
+      summary: List products
+      responses:
+        '200':
+          description: Product list
+  /catalog/products/{id}:
+    get:
+      summary: Get product by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product
+  /catalog/categories:
+    get:
+      summary: List categories
+      responses:
+        '200':
+          description: Category list
+  /promotions/active:
+    get:
+      summary: List active promotions for a segment and placement
+      parameters:
+        - in: query
+          name: segment
+          required: false
+          schema:
+            type: string
+            enum: [b2c, b2b]
+        - in: query
+          name: placement
+          required: false
+          schema:
+            type: string
+            enum: [header, pdp, cart]
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+      responses:
+        '200':
+          description: Active promotion banners
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, type, bannerText, bannerColor, placement, segmentScope, startDate]
+                      properties:
+                        id: { type: string, format: uuid }
+                        name: { type: string }
+                        type: { type: string }
+                        code: { type: string, nullable: true }
+                        bannerText: { type: string }
+                        bannerColor: { type: string }
+                        placement: { type: string, enum: [all, header, pdp, cart] }
+                        segmentScope: { type: string, enum: [all, b2c, b2b] }
+                        discountValue: { type: number }
+                        discountPercentage: { type: number }
+                        minimumOrder: { type: number }
+                        startDate: { type: string, format: date-time }
+                        endDate: { type: string, format: date-time, nullable: true }
+  /cart/items:
+    post:
+      summary: Add cart item
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Created
+  /cart/items/{sku}:
+    patch:
+      summary: Patch cart item
+      parameters:
+        - in: path
+          name: sku
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Delete cart item
+      parameters:
+        - in: path
+          name: sku
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+  /checkout/session:
+    post:
+      summary: Create checkout session
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, currency, shipping_method, shipping_address, items]
+              properties:
+                email: { type: string, format: email }
+                currency: { type: string, enum: [EUR] }
+                shipping_method: { type: string }
+                customer_type: { type: string, enum: [b2c, b2b] }
+                company_name: { type: string }
+                vat_id: { type: string }
+                purchase_order_ref: { type: string }
+                shipping_address:
+                  type: object
+                  required: [first_name, last_name, street1, city, zip, country]
+                  properties:
+                    first_name: { type: string }
+                    last_name: { type: string }
+                    street1: { type: string }
+                    street2: { type: string }
+                    city: { type: string }
+                    zip: { type: string }
+                    country: { type: string }
+                    phone: { type: string }
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [sku, quantity]
+                    properties:
+                      sku: { type: string }
+                      title: { type: string }
+                      quantity: { type: integer, minimum: 1 }
+                      unit_price_amount: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Hosted checkout created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order_id, checkout_url, stripe_session_id, status]
+                properties:
+                  order_id: { type: string, format: uuid }
+                  checkout_url: { type: string, format: uri }
+                  stripe_session_id: { type: string }
+                  status: { type: string, enum: [requires_payment] }
+        '400':
+          description: Validation error
+        '409':
+          description: Idempotency conflict
+        '500':
+          description: Checkout processing failed
+  /checkout/session-status:
+    get:
+      summary: Read checkout session payment status
+      parameters:
+        - in: query
+          name: session_id
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: order_id
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order_id, stripe_session_id, checkout_url, checkout_status, payment_status, order_status, payment_state]
+                properties:
+                  order_id: { type: string, format: uuid }
+                  stripe_session_id: { type: string }
+                  checkout_url: { type: string, format: uri }
+                  checkout_status: { type: string }
+                  payment_status: { type: string }
+                  order_status: { type: string }
+                  payment_state: { type: string, enum: [pending, paid, failed] }
+        '400':
+          description: Missing query params
+        '404':
+          description: Session not found
+        '500':
+          description: Session status lookup failed
+  /webhooks/stripe:
+    post:
+      summary: Stripe webhook receiver
+      responses:
+        '200':
+          description: Processed or duplicate
+        '400':
+          description: Invalid signature/payload
+        '500':
+          description: Processing failed
+  /orders:
+    get:
+      summary: List current user orders
+      responses:
+        '200':
+          description: Order list
+  /orders/{id}:
+    get:
+      summary: Get order by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order
+  /ai/chat:
+    post:
+      summary: AI customer chat response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [role, content]
+                    properties:
+                      role: { type: string }
+                      content: { type: string }
+                context:
+                  type: object
+                  properties:
+                    session_id: { type: string }
+                    user_id: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Chat response
+        '400':
+          description: Invalid payload
+        '500':
+          description: Chat processing failed
+  /account/me:
+    get:
+      summary: Get current user account profile
+      responses:
+        '200':
+          description: Account profile
+    patch:
+      summary: Update current user account profile
+      responses:
+        '200':
+          description: Updated account profile
+
+  /analytics/events:
+    post:
+      summary: Ingest frontend analytics event
+      responses:
+        '202':
+          description: Accepted
+
+  /analytics/funnel:
+    get:
+      summary: Read funnel metrics for a window
+      parameters:
+        - in: query
+          name: hours
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Funnel metrics
+
+  /analytics/alerts:
+    get:
+      summary: Read analytics regression alerts
+      parameters:
+        - in: query
+          name: hours
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Alert list
+
+  /analytics/experiments:
+    get:
+      summary: Read experiment exposure and conversion proxy metrics
+      parameters:
+        - in: query
+          name: hours
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Experiment metrics
+
+  /admin/orders:
+    get:
+      summary: Admin list orders
+      responses:
+        '200':
+          description: Admin order list
+  /admin/orders/{id}:
+    get:
+      summary: Admin get order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order
+    patch:
+      summary: Admin update order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+
+  /admin/customers:
+    get:
+      summary: Admin list customers
+      responses:
+        '200':
+          description: Customer list
+    post:
+      summary: Admin create customer
+      responses:
+        '201':
+          description: Created
+  /admin/customers/{id}:
+    get:
+      summary: Admin get customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer
+    put:
+      summary: Admin update customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Admin delete customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /admin/products:
+    get:
+      summary: Admin list products
+      responses:
+        '200':
+          description: Product list
+    post:
+      summary: Admin create product
+      responses:
+        '201':
+          description: Created
+  /admin/products/{id}:
+    get:
+      summary: Admin get product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product
+    put:
+      summary: Admin update product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Admin delete product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /admin/suppliers:
+    get:
+      summary: Admin list suppliers
+      responses:
+        '200':
+          description: Supplier list
+    post:
+      summary: Admin create supplier
+      responses:
+        '201':
+          description: Created
+  /admin/suppliers/{id}:
+    get:
+      summary: Admin get supplier
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Supplier
+    put:
+      summary: Admin update supplier
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Admin delete supplier
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /admin/categories:
+    get:
+      summary: Admin list categories
+      responses:
+        '200':
+          description: Category list
+    post:
+      summary: Admin create category
+      responses:
+        '201':
+          description: Created
+  /admin/categories/{id}:
+    get:
+      summary: Admin get category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category
+    put:
+      summary: Admin update category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Admin delete category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /admin/pages:
+    get:
+      summary: Admin list pages
+      responses:
+        '200':
+          description: Page list
+    post:
+      summary: Admin create page
+      responses:
+        '201':
+          description: Created
+  /admin/pages/{id}:
+    get:
+      summary: Admin get page
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Page
+    put:
+      summary: Admin update page
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Admin delete page
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /admin/blog:
+    get:
+      summary: Admin list blog posts
+      responses:
+        '200':
+          description: Blog post list
+    post:
+      summary: Admin create blog post
+      responses:
+        '201':
+          description: Created
+  /admin/blog/{id}:
+    get:
+      summary: Admin get blog post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Blog post
+    put:
+      summary: Admin update blog post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Admin delete blog post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /admin/promotions:
+    get:
+      summary: Admin list promotions
+      responses:
+        '200':
+          description: Promotion list
+    post:
+      summary: Admin create promotion
+      responses:
+        '201':
+          description: Created
+  /admin/promotions/{id}:
+    get:
+      summary: Admin get promotion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Promotion
+    put:
+      summary: Admin update promotion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Admin delete promotion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /admin/settings:
+    get:
+      summary: Admin get settings
+      responses:
+        '200':
+          description: Settings
+    put:
+      summary: Admin update settings
+      responses:
+        '200':
+          description: Updated
+
+  /admin/ai/config:
+    get:
+      summary: Admin get AI config
+      responses:
+        '200':
+          description: AI config
+    put:
+      summary: Admin update AI config
+      responses:
+        '200':
+          description: Updated
+
+  /admin/ai/test:
+    post:
+      summary: Test AI provider setup
+      responses:
+        '202':
+          description: Accepted
+
+  /automation/{target}/run:
+    post:
+      summary: Trigger automation run
+      parameters:
+        - in: path
+          name: target
+          required: true
+          schema:
+            type: string
+            enum: [trend, supplier, social]
+      responses:
+        '202':
+          description: Enqueued

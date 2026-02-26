@@ -1,0 +1,76 @@
+package worker
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type Processor struct {
+	pool    *pgxpool.Pool
+	options Options
+
+	gmailTokenMu     sync.Mutex
+	cachedGmailToken string
+	cachedGmailExp   time.Time
+}
+
+func NewProcessor(pool *pgxpool.Pool, options Options) *Processor {
+	return &Processor{
+		pool:    pool,
+		options: options,
+	}
+}
+
+func (p *Processor) Handle(ctx context.Context, job Job) error {
+	switch {
+	case job.JobType == "checkout.session.requested":
+		return p.handleCheckoutSession(ctx, job)
+	case job.JobType == "stripe.webhook.received":
+		return p.handleStripeWebhook(ctx, job)
+	case job.JobType == "order.created":
+		return p.handleOrderCreated(ctx, job)
+	case job.JobType == "payment.succeeded":
+		return p.handlePaymentSucceeded(ctx, job)
+	case job.JobType == "supplier.order.requested":
+		return p.handleSupplierOrderRequested(ctx, job)
+	case job.JobType == "supplier.order.placed":
+		return p.handleSupplierOrderPlaced(ctx, job)
+	case job.JobType == "supplier.order.failed":
+		return p.handleSupplierOrderFailed(ctx, job)
+	case job.JobType == "trend.candidate.launch.requested":
+		return p.handleTrendCandidateLaunchRequested(ctx, job)
+	case job.JobType == "channel.catalog.sync.requested":
+		return p.handleChannelCatalogSyncRequested(ctx, job)
+	case job.JobType == "channel.campaign.publish.requested":
+		return p.handleChannelCampaignPublishRequested(ctx, job)
+	case job.JobType == "fulfillment.started":
+		return p.handleFulfillmentStarted(ctx, job)
+	case job.JobType == "fulfillment.completed":
+		return p.handleFulfillmentCompleted(ctx, job)
+	case job.JobType == "shipment.updated":
+		return p.handleShipmentUpdated(ctx, job)
+	case job.JobType == "ai.provider.test":
+		return p.handleAIProviderTest(ctx, job)
+	case job.JobType == "ai.chat.requested":
+		return p.handleAIChatRequested(ctx, job)
+	case job.JobType == "social.post.requested":
+		return p.handleSocialPostRequested(ctx, job)
+	case job.JobType == "trend.analysis.requested":
+		return p.handleTrendRequested(ctx, job)
+	case job.JobType == "supplier.research.requested":
+		return p.handleSupplierRequested(ctx, job)
+	case job.JobType == "inventory.low":
+		return p.handleInventoryLow(ctx, job)
+	case job.JobType == "ops.weekly.report.requested":
+		return p.handleOpsWeeklyReport(ctx, job)
+	case strings.HasPrefix(job.JobType, "automation.") && strings.HasSuffix(job.JobType, ".run"):
+		return p.handleAutomationRun(ctx, job)
+	default:
+		return fmt.Errorf("%w: unsupported job_type %s", ErrPermanent, job.JobType)
+	}
+}

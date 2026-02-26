@@ -1,5 +1,3 @@
-version: '3.8'
-
 # ============================================================
 # SIMONE-WEBSHOP-01 - Complete Docker Stack
 # Includes: Next.js App + n8n + PostgreSQL + Redis + ClawdBot
@@ -11,7 +9,7 @@ services:
   # ============================================================
   app:
     build:
-      context: .
+      context: ./apps/web
       dockerfile: Dockerfile
     container_name: simone-webshop-app
     ports:
@@ -19,9 +17,10 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://simone:${DB_PASSWORD:-simone123}@postgres:5432/simone_shop
+      - INTERNAL_API_URL=http://api:8080
+      - CORS_ALLOWLIST=${CORS_ALLOWLIST:-http://localhost:3000}
       - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - OPENCODE_ZEN_API_KEY=${OPENCODE_ZEN_API_KEY}
       - OPENCODE_ZEN_MODEL=${OPENCODE_ZEN_MODEL:-grok-code}
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
@@ -34,17 +33,85 @@ services:
       - N8N_WEBHOOK_URL=http://n8n:5678/webhook
       - REDIS_URL=redis://redis:6379
     depends_on:
+      - api
       - postgres
       - redis
-      - n8n
     networks:
       - simone-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # ============================================================
+  # DOMAIN API - Go (catalog/cart/checkout/orders/admin/ai/social)
+  # ============================================================
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: simone-webshop-api
+    ports:
+      - "8082:8080"
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - PORT=8080
+      - DATABASE_URL=postgresql://simone:${DB_PASSWORD:-simone123}@postgres:5432/simone_shop
+      - CORS_ALLOWLIST=${CORS_ALLOWLIST:-http://localhost:3000}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_JWKS_URL=${SUPABASE_JWKS_URL:-}
+      - SUPABASE_ISSUER=${SUPABASE_ISSUER:-}
+      - SUPABASE_AUDIENCE=${SUPABASE_AUDIENCE:-authenticated}
+      - JWT_REQUIRED=${JWT_REQUIRED:-true}
+      - SITE_URL=${SITE_URL:-http://localhost:3000}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - OPENCODE_ZEN_API_KEY=${OPENCODE_ZEN_API_KEY}
+      - OPENCODE_ZEN_MODEL=${OPENCODE_ZEN_MODEL:-grok-code}
+      - OPENCODE_ZEN_URL=${OPENCODE_ZEN_URL:-https://api.opencode.ai/v1/chat/completions}
+    depends_on:
+      - postgres
+    networks:
+      - simone-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================
+  # QUEUE/OUTBOX WORKER - Required for async checkout/event flows
+  # ============================================================
+  worker:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: simone-webshop-worker
+    command: ["/app/worker"]
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - DATABASE_URL=postgresql://simone:${DB_PASSWORD:-simone123}@postgres:5432/simone_shop
+      - WORKER_NAME=simone-worker
+      - GOOGLE_SERVICE_ACCOUNT_JSON_B64=${GOOGLE_SERVICE_ACCOUNT_JSON_B64}
+      - GOOGLE_SERVICE_ACCOUNT_FILE=${GOOGLE_SERVICE_ACCOUNT_FILE}
+      - GMAIL_DELEGATED_USER=${GMAIL_DELEGATED_USER}
+      - GMAIL_SENDER_FROM=${GMAIL_SENDER_FROM}
+      - GMAIL_API_BASE_URL=${GMAIL_API_BASE_URL:-https://gmail.googleapis.com}
+      - BILLING_COMPANY_NAME=${BILLING_COMPANY_NAME}
+      - BILLING_ADDRESS=${BILLING_ADDRESS}
+      - BILLING_TAX_ID=${BILLING_TAX_ID}
+      - BILLING_VAT_ID=${BILLING_VAT_ID}
+      - INVOICE_OUTPUT_DIR=${INVOICE_OUTPUT_DIR:-/tmp/simone-invoices}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - N8N_SHARED_SECRET=${N8N_SHARED_SECRET}
+    depends_on:
+      - postgres
+    networks:
+      - simone-network
+    restart: unless-stopped
 
   # ============================================================
   # N8N - Workflow Automation Engine (CRITICAL!)
@@ -52,6 +119,8 @@ services:
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
     container_name: simone-webshop-n8n
+    profiles:
+      - automation
     ports:
       - "5678:5678"
     environment:
@@ -74,15 +143,9 @@ services:
       - OPENCODE_ZEN_API_KEY=${OPENCODE_ZEN_API_KEY}
       - OPENCODE_ZEN_URL=https://api.opencode.ai/v1/chat/completions
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      # Email
-      - N8N_EMAIL_MODE=smtp
-      - N8N_SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
-      - N8N_SMTP_PORT=${SMTP_PORT:-587}
-      - N8N_SMTP_USER=${SMTP_USER}
-      - N8N_SMTP_PASS=${SMTP_PASS}
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./n8n-workflows:/home/node/workflows:ro
+      - ./workers/n8n/simone/workflows:/home/node/workflows:ro
     depends_on:
       - postgres
     networks:
@@ -108,7 +171,7 @@ services:
       - POSTGRES_DB=simone_shop
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./supabase/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./infra/supabase/migrations:/docker-entrypoint-initdb.d:ro
     networks:
       - simone-network
     restart: unless-stopped
@@ -145,6 +208,8 @@ services:
   clawdbot:
     image: ghcr.io/clawdbot/clawdbot:latest
     container_name: simone-webshop-clawdbot
+    profiles:
+      - automation
     ports:
       - "8080:8080"
       - "8081:8081"  # Webhook receiver

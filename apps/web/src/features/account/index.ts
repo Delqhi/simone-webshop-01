@@ -1,0 +1,1 @@
+export { AccountPageShell } from './AccountPageShell'

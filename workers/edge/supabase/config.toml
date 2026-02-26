@@ -1,0 +1,20 @@
+project_id = "simone-webshop"
+
+[functions]
+[functions.checkout-create]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.fulfillment-run]
+verify_jwt = false
+
+[functions.tracking-update]
+verify_jwt = false
+
+[functions.admin-orders-list]
+verify_jwt = false
+
+[functions.admin-order-update]
+verify_jwt = false

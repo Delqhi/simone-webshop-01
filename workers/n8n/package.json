@@ -1,0 +1,12 @@
+{
+  "name": "@simone/workers-n8n",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"n8n workflows are json assets\"",
+    "lint": "echo \"no n8n linter configured\"",
+    "typecheck": "echo \"n8n typecheck not wired\"",
+    "test": "echo \"no n8n tests yet\""
+  }
+}

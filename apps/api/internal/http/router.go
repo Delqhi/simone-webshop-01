@@ -1,0 +1,96 @@
+package http
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"simone-webshop/apps/api/internal/account"
+	"simone-webshop/apps/api/internal/admin"
+	"simone-webshop/apps/api/internal/ai"
+	"simone-webshop/apps/api/internal/analytics"
+	"simone-webshop/apps/api/internal/cart"
+	"simone-webshop/apps/api/internal/catalog"
+	"simone-webshop/apps/api/internal/checkout"
+	"simone-webshop/apps/api/internal/config"
+	"simone-webshop/apps/api/internal/http/handlers"
+	"simone-webshop/apps/api/internal/http/middleware"
+	"simone-webshop/apps/api/internal/orders"
+	"simone-webshop/apps/api/internal/promotions"
+	"simone-webshop/apps/api/internal/social"
+	"simone-webshop/apps/api/internal/suppliers"
+	"simone-webshop/apps/api/internal/support"
+)
+
+func NewRouter(cfg config.Config, pool *pgxpool.Pool) *gin.Engine {
+	r := gin.New()
+	r.Use(middleware.Recovery(), middleware.RequestID(), middleware.Logging(), middleware.CORS(cfg.CORSAllowlist))
+
+	authn, err := middleware.NewAuthenticator(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	h := &handlers.HealthHandler{Pool: pool}
+	r.GET("/health", h.Health)
+	r.GET("/live", h.Live)
+	r.GET("/ready", h.Ready)
+
+	api := r.Group("/api/v1")
+	analyticsH := analytics.NewHandler(pool)
+	api.POST("/analytics/events", analyticsH.IngestEvent)
+
+	analyticsRead := api.Group("/analytics", authn.Middleware(), middleware.RequireRoles("admin", "ops"))
+	analyticsRead.GET("/funnel", analyticsH.Funnel)
+	analyticsRead.GET("/alerts", analyticsH.Alerts)
+	analyticsRead.GET("/experiments", analyticsH.Experiments)
+
+	catalogH := catalog.NewHandler(pool)
+	api.GET("/catalog/products", catalogH.ListProducts)
+	api.GET("/catalog/products/:id", catalogH.GetProduct)
+	api.GET("/catalog/categories", catalogH.ListCategories)
+
+	promotionsH := promotions.NewHandler(pool)
+	api.GET("/promotions/active", promotionsH.ListActive)
+
+	cartH := cart.NewHandler(pool)
+	cartG := api.Group("/cart", authn.Middleware(), middleware.RequireRoles("customer", "admin", "ops", "support"))
+	cartG.POST("/items", middleware.RequireIdempotency(), cartH.AddItem)
+	cartG.PATCH("/items/:sku", middleware.RequireIdempotency(), cartH.PatchItem)
+	cartG.DELETE("/items/:sku", cartH.DeleteItem)
+
+	checkoutH := checkout.NewHandler(pool, checkout.Options{
+		StripeSecretKey:  cfg.StripeSecretKey,
+		StripeWebhookKey: cfg.StripeWebhookKey,
+		SiteURL:          cfg.SiteURL,
+	})
+	api.POST("/checkout/session", middleware.RequireIdempotency(), checkoutH.CreateSession)
+	api.GET("/checkout/session-status", checkoutH.SessionStatus)
+	api.POST("/webhooks/stripe", checkoutH.StripeWebhook)
+
+	ordersH := orders.NewHandler(pool)
+	ordG := api.Group("/orders", authn.Middleware(), middleware.RequireRoles("customer", "admin", "ops", "support"))
+	ordG.GET("", ordersH.ListOrders)
+	ordG.GET("/:id", ordersH.GetOrder)
+
+	accountH := account.NewHandler(pool)
+	accountG := api.Group("/account", authn.Middleware(), middleware.RequireRoles("customer", "admin", "ops", "support"))
+	accountG.GET("/me", accountH.GetMe)
+	accountG.PATCH("/me", accountH.PatchMe)
+
+	adminH := admin.NewHandler(pool)
+	aiH := ai.NewHandler(pool, ai.Options{ProviderURL: cfg.OpenCodeURL, ProviderKey: cfg.OpenCodeAPIKey, Model: cfg.OpenCodeModel})
+	socialH := social.NewHandler(pool)
+	suppliersH := suppliers.NewHandler(pool, suppliers.Options{
+		WebhookSecret: cfg.SupplierWebhookSecret,
+	})
+	supportH := support.NewHandler(pool)
+	api.POST("/ai/chat", aiH.Chat)
+	registerAdminRoutes(api, authn, adminH, aiH)
+
+	automationG := api.Group("/automation", authn.Middleware(), middleware.RequireRoles("admin", "ops"))
+	automationG.POST("/:target/run", socialH.Run)
+
+	registerSupportRoutes(api, authn, supportH)
+	registerSupplierRoutes(api, suppliersH)
+
+	return r
+}

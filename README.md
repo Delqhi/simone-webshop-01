@@ -1,171 +1,207 @@
-# Singularity Code CLI
+# Simone Webshop: Cross-Category Trend-Commerce Engine
 
-🚀 Complete AI Development Platform  
-Powered by OpenCode Integration
+Stand: **26. Februar 2026**
 
-## 📋 Overview
+## Wahrheitsprinzip (keine Fake-Claims)
 
-### System Components
+Dieses Repository behauptet **nicht** blind "weltbester Shop".
 
-1. **Singularity CLI** (`lib/cli.js`)
-   - Master orchestration system
-   - Plugin management
-   - Command registry
+Der Shop wird nur dann als "weltbeste Ausfuehrung" bewertet, wenn die definierten KPI-Gates (Reliability, Profitabilitaet, Reichweite, Autonomie) messbar erreicht sind.
 
-2. **Singularity Engine** (`lib/singularity-code.js`)
-   - OpenCode integration
-   - Advanced features
+## Ist-Status in einem Satz
 
-3. **Ralph Wiggum** (`packages/ralph-wiggum/`)
-   - Iterative development loops
-   - State management
-   - Auto-commit functionality
+**Technisch ist die Plattform bereits sehr weit (Core Commerce + Supplier Autopilot + Trend/Growth/Channel Control Surface), aber "weltbest" ist aktuell noch ein Zielzustand, kein bewiesener Endzustand.**
 
-4. **Plugin System** (`plugins/`)
-   - Extensible architecture
-   - Feature modules
+## Was heute nachweisbar implementiert ist
 
-## 🛠 Installation
+1. **Admin Control Tower API** fuer Automation, Trends, Growth, Channels, Attribution, Kill-Switch:
+   - `apps/api/internal/http/router_admin.go`
+2. **Supplier Webhook Inbound**:
+   - `apps/api/internal/http/router_suppliers.go`
+3. **Worker-Orchestrierung** fuer zentrale Jobs (`payment.succeeded`, `supplier.order.*`, `trend.candidate.launch.requested`, `channel.*`, Fulfillment):
+   - `apps/api/internal/worker/processor.go`
+4. **Autonomes Dropshipping-Datenmodell** (`product_suppliers`, `supplier_orders`, Supplier-Readiness-Felder):
+   - `infra/supabase/migrations/20260225000800_supplier_autopilot.sql`
+5. **Cross-Category Growth-Datenmodell** (`trend_*`, `channel_*`, `campaign_*`, `creative_*`, `affiliate_*`, `attribution_*`, `budget_*`):
+   - `infra/supabase/migrations/20260225001000_growth_engine.sql`
+6. **Admin-Endpunkte fuer Trend/Growth/Channels/Attribution** sind live im API-Surface.
+7. **Neu in diesem Stand**: Revenue-Forecast ueber Admin API steuerbar:
+   - `GET|PUT /api/v1/admin/revenue/forecast-policy`
+   - `GET /api/v1/admin/revenue/forecast?scenario=conservative|base|scale`
+   - Implementierung:
+     - `apps/api/internal/admin/store_growth_revenue_forecast.go`
+     - `apps/api/internal/admin/handler_growth.go`
+     - `apps/api/internal/http/router_admin.go`
+8. **Neu in diesem Stand**: Growth-Ops Surface erweitert:
+   - `POST /api/v1/admin/trends/signals/ingest`
+   - `GET /api/v1/admin/channels/{channel}/health`
+   - `POST /api/v1/admin/channels/{channel}/events/ingest`
+   - `GET /api/v1/admin/kpi/scorecard`
+   - `GET|POST /api/v1/admin/creatives`
+   - `GET|POST /api/v1/admin/creators`
+   - `GET|POST /api/v1/admin/affiliate/offers`
+
+## Was dieser Shop bietet (ohne Kategorie-Limit)
+
+1. **Cross-Category Trend-Commerce**: keine feste Produktkategorie, sondern Policy-gesteuerte Freigabe (`allow|review_required|deny`).
+2. **Autonomer Checkout->Payment->Supplier-Fulfillment Flow** mit Idempotenz-Guards.
+3. **Omnichannel-Wachstum** ueber TikTok, Meta, YouTube/Google, Pinterest, Snapchat (API/OAuth-first).
+4. **Admin-zentrierte Steuerung** fuer Sortimente, Policies, Budgets, Launches, Kill-Switches.
+5. **Event-/Queue-basierte SoR-Architektur**: Supabase/Postgres bleibt einziges Source-of-Record.
+
+## Weltbeste-Reichweite: Faktenlage (extern, kein Marketing-Sprech)
+
+Die folgenden Markt-/Plattformzahlen sind externe Referenzen und keine internen Erfolgszusagen:
+
+1. US E-Commerce waechst weiter: 2024 ca. **$1.19T**, **+8.1% YoY**, Anteil am Gesamt-Retail ca. **16.1%** ([U.S. Census](https://www.census.gov/retail/ecommerce.html)).
+2. Meta meldet fuer Q4/FY2025 etwa **3.43B DAP** und **3.98B MAP** ([Meta IR, 29.01.2026](https://investor.atmeta.com/investor-news/press-release-details/2026/Meta-Reports-Fourth-Quarter-and-Full-Year-2025-Results/default.aspx)).
+3. Pinterest meldete Ende 2025 **>600M MAUs** ([Pinterest Newsroom, 10.12.2025](https://newsroom.pinterest.com/pinterest-announces-agreement-to-acquire-the-booking-holdings-owned-leading-global-travel-planning-platform-the-fork/)).
+4. Snap meldete fuer Q4 2025 ca. **460M DAUs** ([Snap IR, 04.02.2026](https://investor.snap.com/news/news-details/2026/Snap-Inc.-Announces-Fourth-Quarter-and-Full-Year-2025-Financial-Results/default.aspx)).
+5. TikTok Shop meldete starke BFCM- und US-Wachstumszahlen (u. a. deutlicher Shopper-/Seller-Anstieg) ([TikTok Newsroom](https://newsroom.tiktok.com/en-us/tiktok-shop-hits-new-sales-record-this-black-friday-cyber-monday), [TikTok Newsroom US-Year-1](https://newsroom.tiktok.com/en-us/celebrating-1-year-of-tiktok-shop-in-the-u-s)).
+6. Globaler Checkout-Benchmark bleibt kritisch: durchschnittliche Cart-Abandonment-Rate ~**70.19%** ([Baymard Institute](https://baymard.com/lists/cart-abandonment-rate)).
+7. Skalierungs-Benchmarks grosser Commerce-Plattformen bleiben hoch:
+   - Amazon FY2025 Net Sales **$638.0B**, +11% YoY ([Amazon](https://www.aboutamazon.com/news/company-news/amazon-earnings-q4-2025))
+   - Shopify FY2025 Revenue **$12.0B**, +26% YoY ([Shopify](https://news.shopify.com/shopify-announces-fourth-quarter-and-full-year-2025-financial-results))
+
+## Umsatzprognose (echtes Modell, keine Garantie)
+
+### Formel
+
+1. `paid_clicks = ad_spend / cpc`
+2. `organic_sessions = paid_clicks * organic_lift_pct`
+3. `total_sessions = paid_clicks + organic_sessions`
+4. `orders = total_sessions * cvr`
+5. `gmv = orders * aov`
+6. `mer = gmv / ad_spend`
+
+### Default-Szenarien (konfigurierbar ueber Admin API)
+
+1. **Conservative**: `ad_spend=50,000`, `cpc=0.90`, `organic_lift=20%`, `cvr=2.0%`, `aov=65`
+   - Modellwert: ca. `GMV=86,666.67`, `MER=1.73`
+2. **Base**: `ad_spend=100,000`, `cpc=0.70`, `organic_lift=35%`, `cvr=2.4%`, `aov=72`
+   - Modellwert: ca. `GMV=333,257.14`, `MER=3.33`
+3. **Scale**: `ad_spend=150,000`, `cpc=0.55`, `organic_lift=60%`, `cvr=2.8%`, `aov=78`
+   - Modellwert: ca. `GMV=953,018.18`, `MER=6.35`
+
+**Wichtig:** Das sind Szenarien aus konfigurierbaren Inputs, keine Umsatzzusage.
+
+## API-Oberflaeche (Growth/Trend/Autonomy)
+
+1. `GET|PUT /api/v1/admin/trends/policy`
+2. `GET /api/v1/admin/trends/candidates`
+3. `POST /api/v1/admin/trends/{id}/approve`
+4. `POST /api/v1/admin/trends/{id}/launch`
+5. `GET /api/v1/admin/trends/performance`
+6. `GET|PUT /api/v1/admin/growth/budget-policy`
+7. `GET|PUT /api/v1/admin/revenue/forecast-policy`
+8. `GET /api/v1/admin/revenue/forecast`
+9. `GET /api/v1/admin/channels`
+10. `GET /api/v1/admin/channels/{channel}/health`
+11. `POST /api/v1/admin/channels/{channel}/events/ingest`
+12. `POST /api/v1/admin/channels/{channel}/connect/start`
+13. `POST /api/v1/admin/channels/{channel}/connect/complete`
+14. `POST /api/v1/admin/channels/{channel}/catalog/sync`
+15. `POST /api/v1/admin/channels/{channel}/campaigns/publish`
+16. `GET /api/v1/admin/attribution/summary`
+17. `GET /api/v1/admin/kpi/scorecard`
+18. `GET|POST /api/v1/admin/creatives`
+19. `GET|POST /api/v1/admin/creators`
+20. `GET|POST /api/v1/admin/affiliate/offers`
+21. `POST /api/v1/admin/trends/signals/ingest`
+22. `POST /api/v1/admin/kill-switch/{domain}` (`checkout|channel_sync|campaign_publish|creator_payouts`)
+23. `POST /api/v1/admin/orders/{id}/supplier-dispatch`
+24. `GET /api/v1/admin/orders/{id}/supplier-orders`
+25. `POST /api/v1/suppliers/webhooks/{supplier}`
+
+## KPI-Scorecard fuer den "Weltbest"-Nachweis
+
+Der Shop darf intern nur dann als "weltbeste Ausfuehrung" gelten, wenn mindestens diese Gates stabil erreicht sind:
+
+1. `payment -> supplier_order_placed >= 98.5%`
+2. `payment -> order_confirmation_email_sent >= 99%`
+3. `critical DLQ = 0` (rolling 24h)
+4. `channel event match rate >= 90%`
+5. `admin action -> channel effect latency p95 < 2 min`
+6. keine doppelten Zahlungen/Rechnungen/Supplier-Dispatches in Replay-Tests
+
+## Lokale Entwicklung
+
+### Web
 
 ```bash
-# Clone Repository
-git clone https://github.com/DeepthinkAI2025/singularity-code.git
-
-# Install Dependencies
+cd apps/web
 npm install
-
-# Global CLI
-npm link
+npm run dev
 ```
 
-## 🔧 Configuration
-
-### Environment Variables
+### API
 
 ```bash
-export OPENCODE_API_KEY=your_key
-export RALPH_MODEL=kat-coder-pro-v1
-export RALPH_MAX_ITERATIONS=100
+cd apps/api
+go mod tidy
+go run ./cmd/api
 ```
 
-### Configuration Files
+### Worker
 
 ```bash
-~/.singularity/config/
-├── global.json          # Global settings
-└── plugins/             # Plugin configurations
+cd apps/api
+go run ./cmd/worker
 ```
 
-## 📚 Documentation
-
-### Core Documentation
-
-- [Main Documentation](./docs/main.md)
-- [API Reference](./docs/api.md)
-- [Plugin Development](./docs/plugin-development.md)
-- [Architecture Guide](./docs/architecture.md)
-
-### Component Documentation
-
-- [Ralph Wiggum](./docs/ralph-wiggum.md)
-- [OpenCode Integration](./docs/opencode.md)
-- [CLI Commands](./docs/commands.md)
-
-## 🚀 Quick Start
+## Qualitaets-Gates
 
 ```bash
-# Start Singularity CLI
-singularity
-
-# AI Code Generation
-singularity exec "Build a React component"
-
-# Ralph Wiggum Loop
-singularity ralph "Build a REST API" --max-iterations 50
-
-# Status Check
-singularity status
+cd /Users/jeremy/dev/projects/family-projects/simone-webshop-01
+pnpm run ci
+# optional full API package sweep (includes internal/admin)
+INCLUDE_ADMIN_TESTS=1 pnpm test:api
 ```
 
-## 🧪 Development
+## Go-Live Smoke (gegen laufende Instanz)
 
-### Project Structure
-
-```
-singularity-code/
-├── lib/                    # Core CLI and engine
-│   ├── cli.js            # Main CLI interface
-│   └── singularity-code.js # OpenCode integration
-├── packages/               # Monorepo packages
-│   └── ralph-wiggum/     # Ralph Wiggum implementation
-├── plugins/                # Plugin system
-│   ├── opencode-integration/
-│   ├── oh-my-opencode/
-│   └── ralph-loop/
-├── docs/                   # Documentation
-├── tests/                  # Integration tests
-└── scripts/                # Build and deployment scripts
+```bash
+cd /Users/jeremy/dev/projects/family-projects/simone-webshop-01
+pnpm check:env:live -- --with-smoke
+API_BASE_URL=https://<api-host> \
+ADMIN_BEARER_TOKEN=<admin_jwt> \
+pnpm smoke:go-live
 ```
 
-## 🔌 Quality Standards
+## One-Command Go-Live (Essential)
 
-### Code Quality
+```bash
+cd /Users/jeremy/dev/projects/family-projects/simone-webshop-01
+pnpm go-live:today
+```
 
-- ESLint compliance
-- TypeScript strict mode
-- 80%+ test coverage
-- No console.log in production
+## Verifikation Revenue-Forecast (Admin)
 
-### Git Workflow
+```bash
+# Policy lesen
+curl -H "Authorization: Bearer <admin_jwt>" \
+  http://localhost:8080/api/v1/admin/revenue/forecast-policy
 
-- Conventional commits
-- Feature branches
-- Pull request template
+# Scenario forecast lesen
+curl -H "Authorization: Bearer <admin_jwt>" \
+  "http://localhost:8080/api/v1/admin/revenue/forecast?scenario=base"
 
-### Testing
+# Policy aendern
+curl -X PUT -H "Authorization: Bearer <admin_jwt>" -H "Content-Type: application/json" \
+  -d '{"base":{"cpc":0.65,"cvr":2.6,"aov":75}}' \
+  http://localhost:8080/api/v1/admin/revenue/forecast-policy
+```
 
-- Unit tests
-- Integration tests
-- E2E tests
-- Performance benchmarks
+## Was noch offen ist, um das Ziel zu erreichen
 
-## 🎯 Features
+1. Endgueltige "weltbeste" Einstufung braucht produktive KPI-Historie, nicht nur Code-Surface.
+2. Channel-Connectoren muessen in jedem Zielkonto (DACH + US) mit echten OAuth/API-Accounts produktionsnah durchgetestet werden.
+3. Attribution-Match-Rate und Profit-Gates muessen ueber reales Traffic-Fenster stabil validiert werden.
+4. Last-/Failure-Drills (Supplier down, Gmail 429, Channel 5xx, Stripe replay) muessen im Rollout-Fenster bestanden werden.
 
-### AI Capabilities
-
-- Multi-model support
-- Context awareness
-- Tool usage tracking
-- Error handling
-
-### Orchestration
-
-- Conductor tracks
-- Multi-agent systems
-- Auto-swarm functionality
-
-### Integration
-
-- OpenCode MCP servers
-- Vision quality gates
-- Version control integration
-
-## 📊 Performance
-
-### Benchmarks
-
-- CLI startup: < 1s
-- Code generation: < 5s
-- Test execution: < 30s
-
-### Monitoring
-
-- Analytics dashboard
-- Error tracking
-- Usage metrics
+Detaillierter Plan: `docs/world-best-go-live-plan.md`
+Sofort-Checkliste (heute live): `docs/go-live-today-checklist.md`
 
 ---
 
-**Version:** 3.0.0  
-**License:** MIT  
-**Copyright:** (c) 2025 Singularity Development Team
+Wenn eine Aussage in diesem README nicht ueber Code, Metrik oder Quelle belegbar ist, gilt sie nicht als Tatsache.
