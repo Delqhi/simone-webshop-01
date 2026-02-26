@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { ProductGrid } from '@/components/products/ProductGrid'
+import { JsonLd } from '@/components/seo/JsonLd'
 import { ProductFilters, defaultFilterState, type FilterState } from '@/components/products/ProductFilters'
 import { loadCatalogCategories, loadCatalogProducts } from '@/features/catalog'
 import { SEGMENT_LABELS, useCustomerSegmentStore } from '@/features/segment'
 import { PRIMARY_TRUST_SIGNALS, TrustInlineBar } from '@/features/trust'
+import { buildProductListJsonLd } from '@/lib/seo'
 import type { Category, Product } from '@/types'
 
 function sortProducts(items: Product[], sortBy: string) {
@@ -103,8 +105,14 @@ export default function ProductsPage() {
     return sortProducts(byStock, filters.sortBy)
   }, [filters, products])
 
+  const productListJsonLd = useMemo(
+    () => buildProductListJsonLd(filteredProducts, 'Produktkatalog', '/products'),
+    [filteredProducts],
+  )
+
   return (
     <main className="shell-container py-10">
+      <JsonLd id="products-item-list" data={productListJsonLd} />
       <header className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text-muted">{SEGMENT_LABELS[segment]}</p>
         <h1 className="mt-1 text-4xl">Produkte mit klaren Kosten und Nutzen</h1>

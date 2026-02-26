@@ -124,7 +124,6 @@ export async function loadCatalogProducts(params: ProductQuery = {}): Promise<Pr
       headers: {
         accept: 'application/json',
       },
-      cache: 'no-store',
     })
 
     if (!response.ok) {
@@ -149,7 +148,6 @@ export async function loadCatalogProductById(id: string): Promise<Product | null
       headers: {
         accept: 'application/json',
       },
-      cache: 'no-store',
     })
 
     if (!response.ok) {
@@ -189,7 +187,6 @@ export async function loadCatalogCategories(): Promise<Category[]> {
       headers: {
         accept: 'application/json',
       },
-      cache: 'no-store',
     })
 
     if (!response.ok) {

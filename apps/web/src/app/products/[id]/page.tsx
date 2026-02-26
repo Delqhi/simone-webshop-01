@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ProductGrid } from '@/components/products/ProductGrid'
 import { ProductDetailSkeleton } from '@/components/products/ProductSkeleton'
+import { JsonLd } from '@/components/seo/JsonLd'
 import {
   ProductInfoPanel,
   ProductMediaPanel,
@@ -15,6 +16,7 @@ import {
 import { useCustomerSegmentStore } from '@/features/segment'
 import { trackEvent } from '@/lib/analytics'
 import { useExperimentVariant } from '@/lib/experiments'
+import { buildBreadcrumbJsonLd, buildProductJsonLd } from '@/lib/seo'
 import { useCartStore } from '@/lib/store'
 
 export default function ProductDetailPage() {
@@ -36,6 +38,18 @@ export default function ProductDetailPage() {
 
   const category = useMemo(() => (product ? getProductCategory(product) : null), [product])
   const discount = useMemo(() => (product ? getProductDiscount(product) : null), [product])
+  const productJsonLd = useMemo(() => (product ? buildProductJsonLd(product) : null), [product])
+  const breadcrumbJsonLd = useMemo(
+    () =>
+      product
+        ? buildBreadcrumbJsonLd([
+            { name: 'Start', path: '/' },
+            { name: 'Produkte', path: '/products' },
+            { name: product.name, path: `/products/${encodeURIComponent(product.id)}` },
+          ])
+        : null,
+    [product],
+  )
 
   useEffect(() => {
     if (!product) {
@@ -98,6 +112,8 @@ export default function ProductDetailPage() {
 
   return (
     <main className="shell-container py-10">
+      {productJsonLd ? <JsonLd id="pdp-product-jsonld" data={productJsonLd} /> : null}
+      {breadcrumbJsonLd ? <JsonLd id="pdp-breadcrumb-jsonld" data={breadcrumbJsonLd} /> : null}
       <nav className="mb-5 text-sm text-brand-text-muted">
         <Link href="/" className="hover:text-brand-text">Start</Link>
         <span className="px-2">/</span>

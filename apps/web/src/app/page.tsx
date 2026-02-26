@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, LineChart, MessagesSquare } from 'lucide-react'
 import { ProductGrid } from '@/components/products/ProductGrid'
+import { JsonLd } from '@/components/seo/JsonLd'
 import { Button } from '@/components/ui/Button'
 import { loadCatalogProducts } from '@/features/catalog'
 import { HeroSection, SegmentEntryCards, ValuePropsGrid } from '@/features/home'
 import { useCustomerSegmentStore } from '@/features/segment'
 import { PRIMARY_TRUST_SIGNALS, TrustInlineBar } from '@/features/trust'
 import { useExperimentVariant } from '@/lib/experiments'
+import { buildProductListJsonLd } from '@/lib/seo'
 import type { Product } from '@/types'
 
 export default function HomePage() {
@@ -52,8 +54,14 @@ export default function HomePage() {
       .slice(0, 8)
   }, [products, segment])
 
+  const featuredProductsJsonLd = useMemo(
+    () => buildProductListJsonLd(featuredProducts, 'Empfohlene Produkte', '/'),
+    [featuredProducts],
+  )
+
   return (
     <main className="pb-20">
+      <JsonLd id="home-featured-products" data={featuredProductsJsonLd} />
       <HeroSection segment={segment} variant={heroVariant} />
 
       <section className="shell-container mt-7">
