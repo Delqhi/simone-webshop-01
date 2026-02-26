@@ -9,7 +9,9 @@ const products = [
     trendScore: 93,
     grossMarginPct: 62,
     velocity: "high",
-    description: "Adaptive compression sleeves with high repeat-buy potential.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
+    description: "Compression sleeves for workout recovery with strong repeat potential.",
   },
   {
     id: "SIM-HOME-014",
@@ -19,7 +21,9 @@ const products = [
     trendScore: 88,
     grossMarginPct: 59,
     velocity: "medium",
-    description: "Circadian bedside lamp optimized for low-return gifting.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
+    description: "Warm night light with low-light mode and compact premium design.",
   },
   {
     id: "SIM-PET-077",
@@ -29,7 +33,9 @@ const products = [
     trendScore: 90,
     grossMarginPct: 57,
     velocity: "high",
-    description: "Remote feeder with anti-jam mechanics and premium AOV profile.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1200&q=80",
+    description: "Remote feeder with anti-jam mechanics and premium order value.",
   },
   {
     id: "SIM-TECH-021",
@@ -39,36 +45,17 @@ const products = [
     trendScore: 86,
     grossMarginPct: 61,
     velocity: "medium",
-    description: "Compact creator dock designed for cross-border travel workflows.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
+    description: "Foldable charging dock for creators and mobile-first workflows.",
   },
 ];
 
 const kpis = [
   { label: "Latency p95", value: "< 120ms" },
   { label: "Checkout Uptime", value: "99.95%" },
-  { label: "Automation Coverage", value: "24/7" },
-  { label: "Gross Margin Target", value: "> 58%" },
-];
-
-const channels = ["TikTok", "Meta", "Google", "Pinterest", "Snap", "Affiliate"];
-
-const playbook = [
-  {
-    title: "Trend Radar",
-    detail: "Signals are scored every hour and only high-confidence candidates move to launch.",
-  },
-  {
-    title: "Margin Guardrails",
-    detail: "Ad spend is throttled if projected MER drops below policy thresholds.",
-  },
-  {
-    title: "Ops Automation",
-    detail: "Payment, supplier dispatch, and comms status are idempotent and queue-backed.",
-  },
-  {
-    title: "Channel Control",
-    detail: "Campaign changes are centralized via admin endpoints and near-real-time events.",
-  },
+  { label: "Automation", value: "24/7" },
+  { label: "Margin Target", value: "> 58%" },
 ];
 
 function jsonResponse(data, status = 200) {
@@ -84,85 +71,75 @@ function jsonResponse(data, status = 200) {
 function renderHomeHtml() {
   const productCards = products
     .map(
-      (product, index) => `
-        <article class="product-card" style="--delay:${index * 70}ms">
-          <div class="product-meta">
-            <span>${product.category}</span>
+      (product) => `
+      <article class="card">
+        <div class="card-image-wrap">
+          <img src="${product.imageUrl}" alt="${product.name}" loading="lazy" />
+          <span class="card-badge">${product.category}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
             <span>${product.id}</span>
+            <span>Trend ${product.trendScore}</span>
           </div>
           <h3>${product.name}</h3>
           <p>${product.description}</p>
-          <div class="chip-row">
-            <span class="chip">Trend ${product.trendScore}</span>
-            <span class="chip">Margin ${product.grossMarginPct}%</span>
-            <span class="chip">Velocity ${product.velocity}</span>
+          <div class="chips">
+            <span>Margin ${product.grossMarginPct}%</span>
+            <span>Velocity ${product.velocity}</span>
           </div>
-          <div class="product-footer">
-            <strong class="price">€${product.priceEur.toFixed(2)}</strong>
-            <button type="button" class="cta">Add to Cart</button>
+          <div class="card-foot">
+            <strong>EUR ${product.priceEur.toFixed(2)}</strong>
+            <button class="add-btn" data-id="${product.id}" data-price="${product.priceEur}" data-name="${product.name}">Add</button>
           </div>
-        </article>
-      `
+        </div>
+      </article>
+    `
     )
     .join("");
 
   const kpiRows = kpis
     .map(
       (kpi) => `
-        <div class="kpi">
-          <span>${kpi.label}</span>
-          <strong>${kpi.value}</strong>
-        </div>
-      `
-    )
-    .join("");
-
-  const channelRow = channels
-    .map((channel) => `<span class="channel-pill">${channel}</span>`)
-    .join("");
-
-  const playbookCards = playbook
-    .map(
-      (item) => `
-        <article class="ops-card">
-          <h4>${item.title}</h4>
-          <p>${item.detail}</p>
-        </article>
-      `
+      <div class="kpi">
+        <span>${kpi.label}</span>
+        <strong>${kpi.value}</strong>
+      </div>
+    `
     )
     .join("");
 
   return `<!doctype html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Simone WorldBest Shop</title>
-    <meta name="description" content="Cloudflare-first commerce runtime for Simone WorldBest Shop." />
+    <meta name="description" content="Cloudflare-first storefront with real product cards and live cart UI." />
     <style>
       :root {
-        --bg: #f4f0e8;
-        --ink: #10243d;
-        --ink-soft: #4c6077;
-        --paper: #ffffff;
-        --line: #dde3ec;
-        --brand: #d14f2c;
-        --brand-dark: #9f371d;
-        --hero-a: #0f243d;
-        --hero-b: #1d4064;
+        --bg: #f3f0e9;
+        --panel: #ffffff;
+        --ink: #14263c;
+        --muted: #596b80;
+        --line: #d7dee8;
+        --brand: #cd4b28;
+        --brand-dark: #993318;
+        --hero-a: #10273f;
+        --hero-b: #1d4268;
       }
       * { box-sizing: border-box; }
-      html, body { margin: 0; }
       body {
-        font-family: "Outfit", "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+        margin: 0;
+        font-family: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at 15% 0%, rgba(255, 255, 255, 0.92) 0%, transparent 40%),
-          radial-gradient(circle at 100% 0%, rgba(255, 195, 173, 0.72) 0%, transparent 35%),
+          radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 45%),
+          radial-gradient(circle at 100% 0%, rgba(245, 177, 150, 0.72) 0%, transparent 35%),
           var(--bg);
       }
       .shell {
-        max-width: 1120px;
+        max-width: 1140px;
         margin: 0 auto;
         padding: 1rem 1rem 3rem;
       }
@@ -171,340 +148,421 @@ function renderHomeHtml() {
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        margin-bottom: 0.8rem;
       }
       .logo {
         font-weight: 800;
+        font-size: 1.12rem;
         letter-spacing: 0.01em;
       }
-      .logo span {
-        color: var(--brand);
-      }
-      .toplinks {
+      .logo span { color: var(--brand); }
+      .top-actions {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.45rem;
         flex-wrap: wrap;
       }
-      .toplinks a {
-        color: var(--ink-soft);
+      .top-actions a {
         text-decoration: none;
+        color: var(--muted);
         border: 1px solid var(--line);
         border-radius: 999px;
-        padding: 0.3rem 0.7rem;
-        font-size: 0.86rem;
+        padding: 0.33rem 0.75rem;
+        font-size: 0.85rem;
       }
       .hero {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr;
-        gap: 1rem;
-        background: linear-gradient(132deg, var(--hero-a), var(--hero-b));
-        color: #fff;
+        margin-top: 0.8rem;
         border-radius: 24px;
-        padding: 1.5rem;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 20px 40px rgba(14, 31, 53, 0.22);
+        padding: 1.25rem;
+        color: #fff;
+        background: linear-gradient(130deg, var(--hero-a), var(--hero-b));
+        box-shadow: 0 18px 44px rgba(17, 34, 55, 0.2);
       }
-      .hero::after {
-        content: "";
-        position: absolute;
-        width: 300px;
-        height: 300px;
-        top: -110px;
-        right: -60px;
-        background: radial-gradient(circle, rgba(209, 79, 44, 0.65), rgba(209, 79, 44, 0));
+      .hero-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1.3fr 1fr;
       }
       .badge {
         display: inline-flex;
         border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.24);
+        padding: 0.3rem 0.6rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
         background: rgba(255, 255, 255, 0.1);
-        padding: 0.35rem 0.65rem;
         font-size: 0.82rem;
-        margin-bottom: 0.8rem;
       }
       .hero h1 {
-        margin: 0;
-        font-size: clamp(2rem, 4vw, 3.25rem);
-        line-height: 1.03;
+        margin: 0.65rem 0 0;
+        font-size: clamp(2rem, 4.2vw, 3.3rem);
+        line-height: 1.02;
       }
       .hero p {
-        max-width: 58ch;
-        color: #d6e5fb;
-        margin: 0.7rem 0;
+        color: #d8e7fa;
+        margin: 0.7rem 0 0;
+        max-width: 60ch;
       }
-      .hero-actions {
-        margin-top: 0.85rem;
+      .hero-cta {
         display: flex;
-        gap: 0.6rem;
+        gap: 0.55rem;
         flex-wrap: wrap;
+        margin-top: 1rem;
       }
-      .hero-actions a {
-        text-decoration: none;
+      .hero-cta a {
         border-radius: 10px;
-        padding: 0.55rem 0.95rem;
+        text-decoration: none;
+        padding: 0.55rem 0.9rem;
         font-weight: 700;
       }
-      .hero-actions .primary {
+      .hero-cta .primary {
         background: var(--brand);
-        color: white;
+        color: #fff;
       }
-      .hero-actions .secondary {
-        border: 1px solid rgba(214, 229, 251, 0.42);
-        color: #d6e5fb;
+      .hero-cta .secondary {
+        color: #dceafc;
+        border: 1px solid rgba(220, 234, 252, 0.4);
       }
       .hero-panel {
-        border: 1px solid rgba(214, 229, 251, 0.26);
-        border-radius: 16px;
-        background: rgba(9, 20, 35, 0.28);
-        padding: 0.9rem;
-        backdrop-filter: blur(4px);
-        align-self: end;
+        border: 1px solid rgba(220, 234, 252, 0.25);
+        border-radius: 14px;
+        background: rgba(9, 21, 36, 0.35);
+        padding: 0.8rem;
       }
       .hero-panel h3 {
-        margin: 0 0 0.5rem;
+        margin: 0;
         font-size: 0.95rem;
-        color: #d9e8ff;
       }
       .hero-panel ul {
-        margin: 0;
-        padding: 0;
         list-style: none;
+        padding: 0;
+        margin: 0.6rem 0 0;
         display: grid;
-        gap: 0.45rem;
+        gap: 0.44rem;
       }
       .hero-panel li {
         display: flex;
         justify-content: space-between;
-        border-bottom: 1px dashed rgba(214, 229, 251, 0.18);
-        padding-bottom: 0.35rem;
-        font-size: 0.87rem;
-        color: #d9e8ff;
-      }
-      .hero-panel li strong {
-        color: #ffffff;
-      }
-      .channels {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.45rem;
-        margin: 1rem 0 0.3rem;
-      }
-      .channel-pill {
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 0.3rem 0.7rem;
-        background: #fff;
-        font-size: 0.83rem;
-        color: var(--ink-soft);
+        font-size: 0.86rem;
+        color: #d9e8fb;
       }
       .kpis {
+        margin-top: 0.9rem;
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.6rem;
+        gap: 0.55rem;
       }
       .kpi {
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 0.65rem 0.75rem;
-        display: grid;
-        gap: 0.2rem;
+        border-radius: 12px;
+        border: 1px solid rgba(220, 234, 252, 0.25);
+        background: rgba(8, 20, 35, 0.25);
+        padding: 0.58rem 0.65rem;
       }
       .kpi span {
-        color: var(--ink-soft);
-        font-size: 0.77rem;
+        display: block;
+        color: #bad2f1;
+        font-size: 0.74rem;
       }
       .kpi strong {
-        font-size: 1.02rem;
+        font-size: 0.98rem;
       }
       .section-head {
         margin: 1.3rem 0 0.7rem;
       }
       .section-head h2 {
         margin: 0;
-        font-size: 1.4rem;
+        font-size: 1.5rem;
       }
       .section-head p {
-        margin: 0.2rem 0 0;
-        color: var(--ink-soft);
+        margin: 0.28rem 0 0;
+        color: var(--muted);
       }
-      .product-grid {
+      .grid {
         display: grid;
-        gap: 0.8rem;
+        gap: 0.85rem;
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .product-card {
+      .card {
+        background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 16px;
-        background: var(--paper);
-        padding: 0.95rem;
-        display: grid;
-        gap: 0.55rem;
-        animation: cardIn 450ms ease both;
-        animation-delay: var(--delay);
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(18, 34, 54, 0.05);
       }
-      .product-meta {
+      .card-image-wrap {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        background: #e8eef7;
+      }
+      .card-image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.35s ease;
+      }
+      .card:hover .card-image-wrap img {
+        transform: scale(1.04);
+      }
+      .card-badge {
+        position: absolute;
+        top: 0.6rem;
+        left: 0.6rem;
+        border-radius: 999px;
+        padding: 0.26rem 0.55rem;
+        background: rgba(8, 20, 35, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        font-size: 0.75rem;
+      }
+      .card-body {
+        padding: 0.82rem;
+      }
+      .card-meta {
         display: flex;
         justify-content: space-between;
-        color: #6c7e93;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
+        color: #68798d;
+        font-size: 0.78rem;
       }
-      .product-card h3 {
+      .card h3 {
+        margin: 0.42rem 0;
+        font-size: 1.1rem;
+      }
+      .card p {
         margin: 0;
+        color: var(--muted);
+        min-height: 2.5rem;
       }
-      .product-card p {
-        margin: 0;
-        min-height: 2.6rem;
-        color: var(--ink-soft);
-      }
-      .chip-row {
+      .chips {
+        margin-top: 0.55rem;
         display: flex;
         flex-wrap: wrap;
-        gap: 0.35rem;
+        gap: 0.34rem;
       }
-      .chip {
+      .chips span {
+        border: 1px solid #d3dce8;
         border-radius: 999px;
-        border: 1px solid #d6deea;
-        padding: 0.2rem 0.58rem;
-        font-size: 0.78rem;
-        color: #5f6f83;
         background: #f7faff;
+        color: #5f7084;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.76rem;
       }
-      .product-footer {
+      .card-foot {
+        margin-top: 0.65rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
       }
-      .price {
-        font-size: 1.24rem;
+      .card-foot strong {
+        font-size: 1.2rem;
       }
-      .cta {
+      .add-btn {
         border: 0;
         border-radius: 10px;
         background: var(--brand);
-        color: white;
+        color: #fff;
         font-weight: 700;
-        padding: 0.48rem 0.78rem;
+        padding: 0.48rem 0.82rem;
         cursor: pointer;
       }
-      .cta:hover {
-        background: var(--brand-dark);
-      }
-      .ops-grid {
-        margin-top: 0.5rem;
-        display: grid;
-        gap: 0.7rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .ops-card {
-        background: #fff;
-        border: 1px solid var(--line);
+      .add-btn:hover { background: var(--brand-dark); }
+      .cart {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        width: min(320px, calc(100vw - 2rem));
+        background: rgba(16, 34, 55, 0.95);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 14px;
-        padding: 0.8rem;
+        padding: 0.75rem;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
       }
-      .ops-card h4 {
-        margin: 0 0 0.25rem;
-        font-size: 1rem;
+      .cart-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
-      .ops-card p {
+      .cart-head h3 {
         margin: 0;
-        color: var(--ink-soft);
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+      }
+      .cart-count {
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.2rem 0.5rem;
+        font-size: 0.78rem;
+      }
+      .cart-items {
+        margin-top: 0.55rem;
+        max-height: 160px;
+        overflow: auto;
+        display: grid;
+        gap: 0.35rem;
+      }
+      .cart-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.82rem;
+        color: #d9e6f8;
+      }
+      .cart-total {
+        margin-top: 0.55rem;
+        padding-top: 0.55rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.3);
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
       }
       footer {
         margin-top: 1.3rem;
-        color: #576a80;
+        color: var(--muted);
         font-size: 0.85rem;
       }
       code {
-        background: #ecf2fb;
-        border-radius: 6px;
-        padding: 0.08rem 0.35rem;
+        background: #e9f0fa;
+        border-radius: 5px;
+        padding: 0.1rem 0.34rem;
       }
-      @media (max-width: 880px) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
-        .kpis {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+      @media (max-width: 940px) {
+        .hero-grid { grid-template-columns: 1fr; }
+        .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
-      @media (max-width: 720px) {
-        .product-grid,
-        .ops-grid,
-        .kpis {
-          grid-template-columns: 1fr;
-        }
-      }
-      @keyframes cardIn {
-        from {
-          opacity: 0;
-          transform: translateY(8px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      @media (max-width: 740px) {
+        .grid, .kpis { grid-template-columns: 1fr; }
+        .cart { position: static; width: 100%; margin-top: 1rem; }
       }
     </style>
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
-        <div class="logo">SIMONE <span>COMMERCE OS</span></div>
-        <nav class="toplinks">
+        <div class="logo">SIMONE <span>WORLD SHOP</span></div>
+        <nav class="top-actions">
           <a href="#products">Products</a>
-          <a href="#operations">Operations</a>
           <a href="/api/products">API</a>
+          <a href="/health">Health</a>
         </nav>
       </header>
 
       <section class="hero">
-        <div>
-          <span class="badge">Cloudflare Production · Build ${BUILD_DATE}</span>
-          <h1>WorldBest-ready storefront with enterprise execution.</h1>
-          <p>
-            Free-first, edge-fast commerce runtime: trend products, policy-aware scaling,
-            and measurable operational control in one surface.
-          </p>
-          <div class="hero-actions">
-            <a class="primary" href="#products">Open Catalog</a>
-            <a class="secondary" href="/health">Runtime Health</a>
+        <div class="hero-grid">
+          <div>
+            <span class="badge">Cloudflare Production Build ${BUILD_DATE}</span>
+            <h1>Premium product cards with live cart and real visuals.</h1>
+            <p>
+              Fast storefront, cleaner UI system, stronger card hierarchy, and working
+              cart interactions without fake enterprise filler.
+            </p>
+            <div class="hero-cta">
+              <a class="primary" href="#products">Browse Catalog</a>
+              <a class="secondary" href="/api/products">View Product API</a>
+            </div>
           </div>
+          <aside class="hero-panel">
+            <h3>Ops Snapshot</h3>
+            <ul>
+              <li><span>Trend candidates</span><strong>41 today</strong></li>
+              <li><span>Supplier dispatch p95</span><strong>4m 10s</strong></li>
+              <li><span>Critical DLQ 24h</span><strong>0</strong></li>
+              <li><span>Checkout uptime</span><strong>99.95%</strong></li>
+            </ul>
+          </aside>
         </div>
-        <aside class="hero-panel">
-          <h3>Control Feed</h3>
-          <ul>
-            <li><span>Trend candidates</span><strong>+41 today</strong></li>
-            <li><span>Campaign health</span><strong>green</strong></li>
-            <li><span>Supplier dispatch p95</span><strong>4m 10s</strong></li>
-            <li><span>Critical DLQ (24h)</span><strong>0</strong></li>
-          </ul>
-        </aside>
+        <section class="kpis">${kpiRows}</section>
       </section>
-
-      <div class="channels">${channelRow}</div>
-      <section class="kpis">${kpiRows}</section>
 
       <section class="section-head" id="products">
-        <h2>High-velocity Product Stack</h2>
-        <p>Curated candidates for margin, velocity, and trend durability.</p>
+        <h2>Featured Products</h2>
+        <p>Every card now ships with image, pricing, metrics, and add-to-cart action.</p>
       </section>
-      <section class="product-grid">${productCards}</section>
-
-      <section class="section-head" id="operations">
-        <h2>Enterprise Execution Layer</h2>
-        <p>No vanity claims: every launch is bounded by operational guardrails.</p>
-      </section>
-      <section class="ops-grid">${playbookCards}</section>
+      <section class="grid">${productCards}</section>
 
       <footer>
-        API endpoints: <code>/health</code>, <code>/api/products</code>
+        Endpoints: <code>/health</code> and <code>/api/products</code>
       </footer>
+
+      <aside class="cart" aria-live="polite">
+        <div class="cart-head">
+          <h3>Cart</h3>
+          <span class="cart-count" id="cartCount">0 items</span>
+        </div>
+        <div class="cart-items" id="cartItems">
+          <div class="cart-item"><span>No items yet</span><span>EUR 0.00</span></div>
+        </div>
+        <div class="cart-total">
+          <span>Total</span>
+          <span id="cartTotal">EUR 0.00</span>
+        </div>
+      </aside>
     </main>
+
+    <script>
+      const CART_KEY = "simone_cart_v1";
+      const cartItemsEl = document.getElementById("cartItems");
+      const cartCountEl = document.getElementById("cartCount");
+      const cartTotalEl = document.getElementById("cartTotal");
+      const addButtons = Array.from(document.querySelectorAll(".add-btn"));
+
+      function readCart() {
+        try {
+          const raw = localStorage.getItem(CART_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function writeCart(items) {
+        localStorage.setItem(CART_KEY, JSON.stringify(items));
+      }
+
+      function formatEur(value) {
+        return "EUR " + value.toFixed(2);
+      }
+
+      function renderCart() {
+        const items = readCart();
+        if (!items.length) {
+          cartItemsEl.innerHTML = '<div class="cart-item"><span>No items yet</span><span>EUR 0.00</span></div>';
+          cartCountEl.textContent = "0 items";
+          cartTotalEl.textContent = "EUR 0.00";
+          return;
+        }
+
+        const byName = new Map();
+        for (const item of items) {
+          if (!byName.has(item.name)) {
+            byName.set(item.name, { qty: 0, price: item.price });
+          }
+          byName.get(item.name).qty += 1;
+        }
+
+        const lines = [];
+        let total = 0;
+        for (const [name, info] of byName.entries()) {
+          const lineTotal = info.qty * info.price;
+          total += lineTotal;
+          lines.push('<div class="cart-item"><span>' + name + " x" + info.qty + '</span><span>' + formatEur(lineTotal) + "</span></div>");
+        }
+
+        cartItemsEl.innerHTML = lines.join("");
+        cartCountEl.textContent = items.length + (items.length === 1 ? " item" : " items");
+        cartTotalEl.textContent = formatEur(total);
+      }
+
+      function addItem(button) {
+        const name = button.dataset.name;
+        const price = Number(button.dataset.price || 0);
+        const id = button.dataset.id;
+        const items = readCart();
+        items.push({ id, name, price });
+        writeCart(items);
+        renderCart();
+      }
+
+      addButtons.forEach((button) => {
+        button.addEventListener("click", () => addItem(button));
+      });
+
+      renderCart();
+    </script>
   </body>
 </html>`;
 }
@@ -541,3 +599,4 @@ export default {
     });
   },
 };
+
