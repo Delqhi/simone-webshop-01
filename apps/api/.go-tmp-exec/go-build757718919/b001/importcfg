@@ -1,7 +1,0 @@
-# import config
-packagefile os=/Users/jeremy/Library/Caches/go-build/f4/f424854740412f8660fd3bee9132803f74a32f22696e10444d6819aa30dccf5f-d
-packagefile reflect=/Users/jeremy/Library/Caches/go-build/8f/8f570b2e2ebbb5c18315d6bbb9384b7dd56e6d610bea9848f3be21d74ea9a3d4-d
-packagefile testing=/Users/jeremy/Library/Caches/go-build/4e/4ef74d58fb2eceaca44a6d89469396716f108d5ecfae7f1c1abdbb87ced3d8da-d
-packagefile testing/internal/testdeps=/Users/jeremy/Library/Caches/go-build/fe/feeb51d5e5bc566e552aa8f40ba4f7851847e2e80d5b44724babab302dcdb4a8-d
-packagefile runtime=/Users/jeremy/Library/Caches/go-build/78/78a36a69099de1069d369e0c825d2906c91190412c7b34bd7685e26bc979411b-d
-packagefile simone-webshop/apps/api/internal/admin=/Users/jeremy/dev/projects/family-projects/simone-webshop-01/apps/api/.go-tmp-exec/go-build757718919/b117/_pkg_.a
