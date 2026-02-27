@@ -431,13 +431,25 @@ function renderProductCard(product, options = {}) {
   } = options;
 
   const cardClass = compact ? "product-card compact" : "product-card";
+  const isSoldOut = product.stock <= 0;
+  const isLowStock = !isSoldOut && product.stock <= 8;
+  const stockText = isSoldOut
+    ? "Sold out"
+    : isLowStock
+      ? `Low stock: ${product.stock} left`
+      : `${product.stock} in stock`;
+  const stockClass = isSoldOut
+    ? "stock-state sold-out"
+    : isLowStock
+      ? "stock-state low-stock"
+      : "stock-state in-stock";
 
   return `
 <article class="${cardClass}" data-product-card data-name="${escapeHtml(
     (product.name + " " + product.description).toLowerCase(),
   )}" data-category="${escapeHtml(product.category)}" data-price="${product.priceEur}" data-rating="${
     product.rating
-  }">
+  }" data-stock="${product.stock}">
   <a href="/products/${product.slug}" class="product-image-wrap">
     <img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" loading="lazy" />
     <span class="product-badge">${escapeHtml(product.badge || "Featured")}</span>
@@ -462,6 +474,7 @@ function renderProductCard(product, options = {}) {
       <span class="stars">${renderStars(product.rating)}</span>
       <span>${product.rating.toFixed(1)} (${product.reviewCount})</span>
     </div>
+    <p class="${stockClass}">${stockText}</p>
 
     <div class="product-price-row">
       <div>
@@ -470,7 +483,9 @@ function renderProductCard(product, options = {}) {
       </div>
       <button type="button" class="btn-primary js-add-to-cart" data-product-id="${product.id}" aria-label="Add ${escapeHtml(
     product.name,
-  )} to cart">Add to Cart</button>
+  )} to cart"${isSoldOut ? ` disabled aria-disabled="true"` : ""}>${
+    isSoldOut ? "Sold out" : "Add to Cart"
+  }</button>
     </div>
   </div>
 </article>`;
@@ -658,6 +673,11 @@ function renderProductsPage(pathname) {
 
 function renderProductDetailPage(pathname, product) {
   const related = PRODUCTS.filter((entry) => entry.id !== product.id).slice(0, 4);
+  const isSoldOut = product.stock <= 0;
+  const isLowStock = !isSoldOut && product.stock <= 8;
+  const detailQtyMax = Math.max(1, Math.min(20, product.stock || 1));
+  const stockPillClass = isSoldOut ? "stock-pill sold-out" : isLowStock ? "stock-pill low-stock" : "stock-pill";
+  const stockPillText = isSoldOut ? "Sold out" : `${product.stock} in stock`;
 
   const content = `
 <section class="shell product-page-top">
@@ -710,13 +730,19 @@ function renderProductDetailPage(pathname, product) {
               : ""
           }
         </div>
-        <span class="stock-pill">${product.stock} in stock</span>
+        <span class="${stockPillClass}">${stockPillText}</span>
       </div>
       ${
-        product.stock <= 8
+        isLowStock
           ? `<p class="detail-stock-note">Low stock: only ${product.stock} units left.</p>`
           : ""
       }
+      ${
+        isSoldOut
+          ? `<p class="detail-stock-note sold">This product is currently unavailable. Check back soon.</p>`
+          : ""
+      }
+      <p class="detail-delivery" id="detailDeliveryText"></p>
 
       <ul class="detail-feature-list">
         ${product.features.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
@@ -724,13 +750,23 @@ function renderProductDetailPage(pathname, product) {
 
       <div class="detail-actions">
         <div class="detail-qty-control" aria-label="Quantity selector">
-          <button type="button" id="detailQtyDecrease" aria-label="Decrease quantity">-</button>
+          <button type="button" id="detailQtyDecrease" aria-label="Decrease quantity"${
+            isSoldOut ? " disabled aria-disabled=\"true\"" : ""
+          }>-</button>
           <label for="detailQty" class="sr-only">Quantity</label>
-          <input id="detailQty" class="qty-input" type="number" min="1" max="20" value="1" />
-          <button type="button" id="detailQtyIncrease" aria-label="Increase quantity">+</button>
+          <input id="detailQty" class="qty-input" type="number" min="1" max="${detailQtyMax}" value="1"${
+            isSoldOut ? " disabled aria-disabled=\"true\"" : ""
+          } />
+          <button type="button" id="detailQtyIncrease" aria-label="Increase quantity"${
+            isSoldOut ? " disabled aria-disabled=\"true\"" : ""
+          }>+</button>
         </div>
-        <button type="button" id="detailAddButton" class="btn-primary" data-product-id="${product.id}">Add to cart</button>
-        <button type="button" id="detailBuyNowButton" class="btn-secondary" data-product-id="${product.id}">Buy now</button>
+        <button type="button" id="detailAddButton" class="btn-primary" data-product-id="${product.id}"${
+          isSoldOut ? " disabled aria-disabled=\"true\"" : ""
+        }>${isSoldOut ? "Sold out" : "Add to cart"}</button>
+        <button type="button" id="detailBuyNowButton" class="btn-secondary" data-product-id="${product.id}"${
+          isSoldOut ? " disabled aria-disabled=\"true\"" : ""
+        }>${isSoldOut ? "Unavailable" : "Buy now"}</button>
       </div>
 
       <div class="trust-inline">
@@ -801,6 +837,7 @@ function renderCartPage(pathname) {
           <div class="shipping-progress-fill" id="cartShippingProgressFill"></div>
         </div>
       </div>
+      <p class="delivery-estimate" id="cartDeliveryEstimate">Estimated delivery: -</p>
       <div class="summary-row"><span>Items</span><strong id="cartItemCount">0</strong></div>
       <div class="summary-row"><span>Subtotal</span><strong id="cartSubtotal">€0</strong></div>
       <div class="summary-row"><span>Shipping</span><strong id="cartShipping">€0</strong></div>
@@ -878,6 +915,7 @@ function renderCheckoutPage(pathname) {
           <div class="shipping-progress-fill" id="checkoutShippingProgressFill"></div>
         </div>
       </div>
+      <p class="delivery-estimate" id="checkoutDeliveryEstimate">Estimated delivery: -</p>
       <div id="checkoutItems" class="checkout-item-list"></div>
       <div class="summary-row"><span>Items</span><strong id="checkoutItemCount">0</strong></div>
       <div class="summary-row"><span>Subtotal</span><strong id="checkoutSubtotal">€0</strong></div>
@@ -916,7 +954,10 @@ function renderOrderSuccessPage(pathname) {
     <h2>Order details</h2>
     <p id="successOrderId">Order ID: -</p>
     <p id="successOrderMeta">Items: 0 · Total: €0</p>
+    <p id="successPlaced">Placed: -</p>
+    <p id="successDelivery">Estimated delivery: -</p>
     <p id="successCustomer">Customer: -</p>
+    <p id="successAddress">Shipping address: -</p>
     <p id="successPayment">Payment: -</p>
     <div id="successItems" class="success-item-list"></div>
     <div class="success-actions">
@@ -1429,6 +1470,24 @@ img { display: block; max-width: 100%; }
   font-size: 0.8rem;
 }
 
+.stock-state {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.stock-state.in-stock {
+  color: #0f766e;
+}
+
+.stock-state.low-stock {
+  color: #b45309;
+}
+
+.stock-state.sold-out {
+  color: #be123c;
+}
+
 .stars { display: inline-flex; gap: 0.05rem; }
 .star { color: #d1d5db; font-size: 0.76rem; }
 .star.filled { color: #d4af37; }
@@ -1477,6 +1536,13 @@ img { display: block; max-width: 100%; }
 
 .btn-primary:hover {
   background: #2a2a2a;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  filter: grayscale(0.15);
 }
 
 .btn-secondary {
@@ -1785,9 +1851,32 @@ img { display: block; max-width: 100%; }
   padding: 0.3rem 0.6rem;
 }
 
+.stock-pill.low-stock {
+  border-color: rgba(180, 83, 9, 0.35);
+  background: rgba(254, 243, 199, 0.7);
+  color: #92400e;
+}
+
+.stock-pill.sold-out {
+  border-color: rgba(190, 18, 60, 0.35);
+  background: rgba(255, 228, 230, 0.7);
+  color: #9f1239;
+}
+
 .detail-stock-note {
   margin: 0.45rem 0 0;
-  color: #be123c;
+  color: #b45309;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.detail-stock-note.sold {
+  color: #9f1239;
+}
+
+.detail-delivery {
+  margin: 0.45rem 0 0;
+  color: var(--ink-muted);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -1832,6 +1921,11 @@ img { display: block; max-width: 100%; }
   cursor: pointer;
   font-size: 1rem;
   font-weight: 700;
+}
+
+.detail-qty-control button:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .qty-input {
@@ -1931,6 +2025,13 @@ img { display: block; max-width: 100%; }
   font-size: 0.82rem;
 }
 
+.cart-item-stock {
+  margin: 0.2rem 0 0;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .qty-control {
   margin-top: 0.4rem;
   display: inline-flex;
@@ -1948,6 +2049,11 @@ img { display: block; max-width: 100%; }
   cursor: pointer;
   font-size: 1rem;
   font-weight: 700;
+}
+
+.qty-control button:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .qty-control span {
@@ -2037,6 +2143,13 @@ img { display: block; max-width: 100%; }
   margin-top: 0.58rem;
   color: var(--ink-muted);
   font-size: 0.78rem;
+}
+
+.delivery-estimate {
+  margin: 0.52rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.79rem;
+  font-weight: 700;
 }
 
 .cart-summary .btn-secondary.full {
@@ -2461,6 +2574,8 @@ function renderGlobalScript() {
     name: product.name,
     category: product.category,
     priceEur: product.priceEur,
+    compareAtEur: product.compareAtEur,
+    stock: product.stock,
     imageUrl: product.imageUrl,
   }));
 
@@ -2471,12 +2586,42 @@ function renderGlobalScript() {
   const PRODUCT_BY_ID = new Map(SHOP_PRODUCTS.map((product) => [product.id, product]));
   const CART_KEY = 'aurum_shop_cart_v1';
   const LAST_ORDER_KEY = 'aurum_shop_last_order_v1';
+  const CHECKOUT_DRAFT_KEY = 'aurum_checkout_draft_v1';
   const FREE_SHIPPING_THRESHOLD = 50;
   const MAX_ITEM_QTY = 20;
+  const LOW_STOCK_THRESHOLD = 8;
 
   function clampQty(value) {
     const normalized = Number.isFinite(value) ? Math.round(value) : 1;
     return Math.max(1, Math.min(MAX_ITEM_QTY, normalized));
+  }
+
+  function maxQtyForProduct(product) {
+    if (!product) {
+      return 1;
+    }
+    const stock = Number.isFinite(product.stock) ? Math.max(0, Math.round(product.stock)) : 0;
+    if (stock <= 0) {
+      return 0;
+    }
+    return Math.min(MAX_ITEM_QTY, stock);
+  }
+
+  function clampQtyForProduct(product, value) {
+    const maxQty = maxQtyForProduct(product);
+    if (maxQty <= 0) {
+      return 0;
+    }
+    return Math.max(1, Math.min(maxQty, clampQty(value)));
+  }
+
+  function productIsSoldOut(product) {
+    return maxQtyForProduct(product) <= 0;
+  }
+
+  function productIsLowStock(product) {
+    const maxQty = maxQtyForProduct(product);
+    return maxQty > 0 && maxQty <= LOW_STOCK_THRESHOLD;
   }
 
   function formatPrice(value) {
@@ -2495,8 +2640,18 @@ function renderGlobalScript() {
         return [];
       }
       return parsed
-        .filter((item) => PRODUCT_BY_ID.has(item.id) && Number(item.qty) > 0)
-        .map((item) => ({ id: item.id, qty: clampQty(Number(item.qty)) }));
+        .map((item) => {
+          const product = PRODUCT_BY_ID.get(item.id);
+          if (!product) {
+            return null;
+          }
+          const qty = clampQtyForProduct(product, Number(item.qty));
+          if (qty <= 0) {
+            return null;
+          }
+          return { id: item.id, qty };
+        })
+        .filter((item) => item !== null);
     } catch {
       return [];
     }
@@ -2522,6 +2677,37 @@ function renderGlobalScript() {
 
   function shippingCost(subtotal) {
     return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 4.99;
+  }
+
+  function estimateDeliveryLabel(baseDate = new Date()) {
+    const start = new Date(baseDate);
+    start.setDate(start.getDate() + 2);
+    const end = new Date(baseDate);
+    end.setDate(end.getDate() + 4);
+
+    const fmt = new Intl.DateTimeFormat('de-DE', {
+      day: '2-digit',
+      month: 'short',
+    });
+    return fmt.format(start) + ' - ' + fmt.format(end);
+  }
+
+  function renderDeliveryEstimate(prefix, hasItems) {
+    const node = document.getElementById(prefix + 'DeliveryEstimate');
+    if (!node) {
+      return;
+    }
+    node.textContent = hasItems
+      ? 'Estimated delivery: ' + estimateDeliveryLabel()
+      : 'Estimated delivery appears after adding products.';
+  }
+
+  function renderDetailDeliveryEstimate() {
+    const node = document.getElementById('detailDeliveryText');
+    if (!node) {
+      return;
+    }
+    node.textContent = 'Estimated delivery: ' + estimateDeliveryLabel();
   }
 
   function renderShippingProgress(prefix, subtotal) {
@@ -2574,32 +2760,60 @@ function renderGlobalScript() {
       return;
     }
 
-    const nextQty = clampQty(Number(qty));
+    if (productIsSoldOut(product)) {
+      showToast(product.name + ' is currently sold out');
+      return;
+    }
+
+    const nextQty = clampQtyForProduct(product, Number(qty));
+    if (nextQty <= 0) {
+      showToast(product.name + ' is currently unavailable');
+      return;
+    }
+
     const items = readCart();
     const existing = items.find((item) => item.id === productId);
+    const existingQty = existing ? existing.qty : 0;
+    const mergedQty = clampQtyForProduct(product, existingQty + nextQty);
+    if (mergedQty <= 0) {
+      showToast(product.name + ' is currently unavailable');
+      return;
+    }
+
     if (existing) {
-      existing.qty = clampQty(existing.qty + nextQty);
+      existing.qty = mergedQty;
     } else {
-      items.push({ id: productId, qty: nextQty });
+      items.push({ id: productId, qty: mergedQty });
     }
     writeCart(items);
     syncCartBadges();
-    showToast(product.name + ' added to cart');
+    if (mergedQty === existingQty) {
+      showToast('Maximum available quantity reached for ' + product.name);
+    } else {
+      showToast(product.name + ' added to cart');
+    }
   }
 
   function updateCartItem(productId, nextQty) {
+    const product = PRODUCT_BY_ID.get(productId);
     const items = readCart();
     const target = items.find((item) => item.id === productId);
     if (!target) {
       return;
     }
 
-    if (nextQty <= 0) {
+    if (!product || productIsSoldOut(product) || nextQty <= 0) {
       const filtered = items.filter((item) => item.id !== productId);
       writeCart(filtered);
     } else {
-      target.qty = clampQty(nextQty);
-      writeCart(items);
+      const clampedQty = clampQtyForProduct(product, nextQty);
+      if (clampedQty <= 0) {
+        const filtered = items.filter((item) => item.id !== productId);
+        writeCart(filtered);
+      } else {
+        target.qty = clampedQty;
+        writeCart(items);
+      }
     }
     syncCartBadges();
     renderCartPage();
@@ -2616,6 +2830,9 @@ function renderGlobalScript() {
 
   function bindAddButtons() {
     document.querySelectorAll('.js-add-to-cart').forEach((button) => {
+      if (button.disabled) {
+        return;
+      }
       button.addEventListener('click', () => {
         const id = button.getAttribute('data-product-id');
         if (!id) {
@@ -2636,29 +2853,65 @@ function renderGlobalScript() {
       return;
     }
 
+    const detailProductId =
+      (button ? button.getAttribute('data-product-id') : '') ||
+      (buyNowButton ? buyNowButton.getAttribute('data-product-id') : '') ||
+      '';
+    const detailProduct = PRODUCT_BY_ID.get(detailProductId);
+    const soldOut = productIsSoldOut(detailProduct);
+    const detailMaxQty = Math.max(1, maxQtyForProduct(detailProduct));
+
     function readQty() {
-      return clampQty(Number.parseInt(qtyInput.value || '1', 10));
+      const parsed = Number.parseInt(qtyInput.value || '1', 10);
+      const normalized = clampQtyForProduct(detailProduct, parsed);
+      return normalized <= 0 ? 1 : normalized;
     }
 
     function writeQty(value) {
-      qtyInput.value = String(clampQty(value));
+      const normalized = clampQtyForProduct(detailProduct, value);
+      qtyInput.value = String(normalized <= 0 ? 1 : normalized);
+    }
+
+    function syncQtyControls() {
+      const current = readQty();
+      qtyInput.max = String(detailMaxQty);
+      if (qtyDecrease) {
+        qtyDecrease.disabled = soldOut || current <= 1;
+      }
+      if (qtyIncrease) {
+        qtyIncrease.disabled = soldOut || current >= detailMaxQty;
+      }
+    }
+
+    if (soldOut) {
+      qtyInput.value = '1';
+      qtyInput.disabled = true;
+      if (qtyDecrease) qtyDecrease.disabled = true;
+      if (qtyIncrease) qtyIncrease.disabled = true;
+      if (button) button.disabled = true;
+      if (buyNowButton) buyNowButton.disabled = true;
+      return;
     }
 
     writeQty(readQty());
+    syncQtyControls();
 
     qtyInput.addEventListener('change', () => {
       writeQty(readQty());
+      syncQtyControls();
     });
 
     if (qtyDecrease) {
       qtyDecrease.addEventListener('click', () => {
         writeQty(readQty() - 1);
+        syncQtyControls();
       });
     }
 
     if (qtyIncrease) {
       qtyIncrease.addEventListener('click', () => {
         writeQty(readQty() + 1);
+        syncQtyControls();
       });
     }
 
@@ -2674,9 +2927,14 @@ function renderGlobalScript() {
           return;
         }
 
+        const beforeCount = cartCount(readCart());
         addToCart(id, qty);
+        const afterCount = cartCount(readCart());
+        syncQtyControls();
         if (redirectToCheckout) {
-          window.location.href = '/checkout';
+          if (afterCount > beforeCount) {
+            window.location.href = '/checkout';
+          }
         }
       });
     }
@@ -2865,6 +3123,7 @@ function renderGlobalScript() {
       shippingNode.textContent = formatPrice(0);
       totalNode.textContent = formatPrice(0);
       renderShippingProgress('cart', 0);
+      renderDeliveryEstimate('cart', false);
       if (clearCartButton) {
         clearCartButton.onclick = null;
       }
@@ -2881,6 +3140,11 @@ function renderGlobalScript() {
       if (!product) {
         return;
       }
+      const maxQty = Math.max(1, maxQtyForProduct(product));
+      const stockCount = Number.isFinite(product.stock) ? Math.max(0, Math.round(product.stock)) : 0;
+      const stockHint = productIsLowStock(product)
+        ? 'Only ' + stockCount + ' left in stock'
+        : stockCount + ' in stock' + (stockCount > maxQty ? ' · max ' + maxQty + ' per order' : '');
 
       const article = document.createElement('article');
       article.className = 'cart-item';
@@ -2890,10 +3154,13 @@ function renderGlobalScript() {
         '<div>' +
         '  <a class="cart-item-name" href="/products/' + product.slug + '">' + product.name + '</a>' +
         '  <p class="cart-item-sub">' + product.category + '</p>' +
+        '  <p class="cart-item-stock">' + stockHint + '</p>' +
         '  <div class="qty-control">' +
         '    <button type="button" data-cart-action="decrease" aria-label="Decrease quantity">-</button>' +
         '    <span>' + item.qty + '</span>' +
-        '    <button type="button" data-cart-action="increase" aria-label="Increase quantity">+</button>' +
+        '    <button type="button" data-cart-action="increase" aria-label="Increase quantity"' +
+        (item.qty >= maxQty ? ' disabled aria-disabled="true"' : '') +
+        '>+</button>' +
         '  </div>' +
         '  <button type="button" class="remove-btn" data-cart-action="remove">Remove</button>' +
         '</div>' +
@@ -2911,6 +3178,7 @@ function renderGlobalScript() {
     shippingNode.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
     totalNode.textContent = formatPrice(subtotal + shipping);
     renderShippingProgress('cart', subtotal);
+    renderDeliveryEstimate('cart', true);
 
     if (clearCartButton) {
       clearCartButton.onclick = () => {
@@ -2924,7 +3192,9 @@ function renderGlobalScript() {
 
     if (recommendations && recoGrid) {
       const cartIds = new Set(items.map((item) => item.id));
-      const suggested = SHOP_PRODUCTS.filter((product) => !cartIds.has(product.id)).slice(0, 3);
+      const suggested = SHOP_PRODUCTS
+        .filter((product) => !cartIds.has(product.id) && !productIsSoldOut(product))
+        .slice(0, 3);
 
       if (suggested.length === 0) {
         recommendations.hidden = true;
@@ -3021,6 +3291,7 @@ function renderGlobalScript() {
       shippingNode.textContent = formatPrice(0);
       totalNode.textContent = formatPrice(0);
       renderShippingProgress('checkout', 0);
+      renderDeliveryEstimate('checkout', false);
       return;
     }
 
@@ -3054,6 +3325,71 @@ function renderGlobalScript() {
     shippingNode.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
     totalNode.textContent = formatPrice(subtotal + shipping);
     renderShippingProgress('checkout', subtotal);
+    renderDeliveryEstimate('checkout', true);
+  }
+
+  function paymentMethodLabel(value) {
+    const paymentLabelMap = {
+      card: 'Credit Card',
+      paypal: 'PayPal',
+      klarna: 'Klarna',
+    };
+    return paymentLabelMap[value] || value;
+  }
+
+  function bindCheckoutDraft() {
+    const form = document.getElementById('checkoutForm');
+    if (!form) {
+      return;
+    }
+
+    const fields = Array.from(form.querySelectorAll('input[name], select[name]'));
+    if (fields.length === 0) {
+      return;
+    }
+
+    let restored = false;
+    try {
+      const raw = localStorage.getItem(CHECKOUT_DRAFT_KEY);
+      const draft = raw ? JSON.parse(raw) : null;
+      if (draft && typeof draft === 'object') {
+        fields.forEach((field) => {
+          const name = field.getAttribute('name') || '';
+          const saved = typeof draft[name] === 'string' ? draft[name] : '';
+          if (!name || !saved) {
+            return;
+          }
+          if (!field.value) {
+            field.value = saved;
+            restored = true;
+          }
+        });
+      }
+    } catch {
+      // Ignore malformed drafts.
+    }
+
+    if (restored) {
+      showToast('Checkout form restored');
+    }
+
+    function persistDraft() {
+      const snapshot = {};
+      fields.forEach((field) => {
+        const name = field.getAttribute('name') || '';
+        if (!name) {
+          return;
+        }
+        snapshot[name] = field.value;
+      });
+      localStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(snapshot));
+    }
+
+    fields.forEach((field) => {
+      field.addEventListener('input', persistDraft);
+      field.addEventListener('change', persistDraft);
+      field.addEventListener('blur', persistDraft);
+    });
   }
 
   function bindCheckoutForm() {
@@ -3099,6 +3435,7 @@ function renderGlobalScript() {
       };
 
       localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+      localStorage.removeItem(CHECKOUT_DRAFT_KEY);
       writeCart([]);
       syncCartBadges();
       window.location.href = '/order-success';
@@ -3108,30 +3445,65 @@ function renderGlobalScript() {
   function renderSuccessPage() {
     const orderIdNode = document.getElementById('successOrderId');
     const orderMetaNode = document.getElementById('successOrderMeta');
+    const placedNode = document.getElementById('successPlaced');
+    const deliveryNode = document.getElementById('successDelivery');
     const customerNode = document.getElementById('successCustomer');
+    const addressNode = document.getElementById('successAddress');
     const paymentNode = document.getElementById('successPayment');
     const itemsNode = document.getElementById('successItems');
     if (!orderIdNode || !orderMetaNode) {
       return;
     }
 
+    function setFallback(metaText) {
+      orderIdNode.textContent = 'Order ID: not available';
+      orderMetaNode.textContent = metaText;
+      if (placedNode) placedNode.textContent = 'Placed: -';
+      if (deliveryNode) deliveryNode.textContent = 'Estimated delivery: -';
+      if (customerNode) customerNode.textContent = 'Customer: -';
+      if (addressNode) addressNode.textContent = 'Shipping address: -';
+      if (paymentNode) paymentNode.textContent = 'Payment: -';
+      if (itemsNode) itemsNode.innerHTML = '';
+    }
+
     try {
       const raw = localStorage.getItem(LAST_ORDER_KEY);
       if (!raw) {
-        orderIdNode.textContent = 'Order ID: not available';
-        orderMetaNode.textContent = 'No recent order was found in this browser session.';
-        if (customerNode) customerNode.textContent = 'Customer: -';
-        if (paymentNode) paymentNode.textContent = 'Payment: -';
-        if (itemsNode) itemsNode.innerHTML = '';
+        setFallback('No recent order was found in this browser session.');
         return;
       }
 
       const order = JSON.parse(raw);
-      const totalItems = Array.isArray(order.items)
-        ? order.items.reduce((sum, item) => sum + Number(item.qty || 0), 0)
-        : 0;
+      const orderItems = Array.isArray(order.items) ? order.items : [];
+      const totalItems = orderItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+      const subtotal = Number(order.subtotal || 0);
+      const shipping = Number(order.shipping || 0);
+      const total = Number(order.total || 0);
+      const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+      const placedLabel =
+        createdAt && !Number.isNaN(createdAt.getTime())
+          ? new Intl.DateTimeFormat('de-DE', {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            }).format(createdAt)
+          : '-';
       orderIdNode.textContent = 'Order ID: ' + (order.id || '-');
-      orderMetaNode.textContent = 'Items: ' + totalItems + ' · Total: ' + formatPrice(Number(order.total || 0));
+      orderMetaNode.textContent =
+        'Items: ' +
+        totalItems +
+        ' · Subtotal: ' +
+        formatPrice(subtotal) +
+        ' · Shipping: ' +
+        (shipping === 0 ? 'Free' : formatPrice(shipping)) +
+        ' · Total: ' +
+        formatPrice(total);
+      if (placedNode) {
+        placedNode.textContent = 'Placed: ' + placedLabel;
+      }
+      if (deliveryNode) {
+        const deliveryBase = createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt : new Date();
+        deliveryNode.textContent = 'Estimated delivery: ' + estimateDeliveryLabel(deliveryBase);
+      }
 
       if (customerNode) {
         const first = String(order.customer?.firstName || '').trim();
@@ -3141,19 +3513,21 @@ function renderGlobalScript() {
         customerNode.textContent = 'Customer: ' + (name || '-') + (email ? ' · ' + email : '');
       }
 
+      if (addressNode) {
+        const street = String(order.customer?.street || '').trim();
+        const zip = String(order.customer?.zip || '').trim();
+        const city = String(order.customer?.city || '').trim();
+        const cityLine = [zip, city].filter(Boolean).join(' ');
+        const fullAddress = [street, cityLine].filter(Boolean).join(', ');
+        addressNode.textContent = 'Shipping address: ' + (fullAddress || '-');
+      }
+
       if (paymentNode) {
         const paymentRaw = String(order.customer?.paymentMethod || 'card');
-        const paymentLabelMap = {
-          card: 'Credit Card',
-          paypal: 'PayPal',
-          klarna: 'Klarna',
-        };
-        paymentNode.textContent =
-          'Payment: ' + (paymentLabelMap[paymentRaw] || paymentRaw);
+        paymentNode.textContent = 'Payment: ' + paymentMethodLabel(paymentRaw);
       }
 
       if (itemsNode) {
-        const orderItems = Array.isArray(order.items) ? order.items : [];
         itemsNode.innerHTML = '';
         orderItems.forEach((item) => {
           const id = String(item.id || '');
@@ -3169,11 +3543,7 @@ function renderGlobalScript() {
         });
       }
     } catch {
-      orderIdNode.textContent = 'Order ID: not available';
-      orderMetaNode.textContent = 'Could not load order information.';
-      if (customerNode) customerNode.textContent = 'Customer: -';
-      if (paymentNode) paymentNode.textContent = 'Payment: -';
-      if (itemsNode) itemsNode.innerHTML = '';
+      setFallback('Could not load order information.');
     }
   }
 
@@ -3196,9 +3566,11 @@ function renderGlobalScript() {
     bindAddButtons();
     bindDetailAdd();
     bindGalleryThumbs();
+    renderDetailDeliveryEstimate();
     bindCatalogFilters();
     renderCartPage();
     renderCheckoutSummary();
+    bindCheckoutDraft();
     bindCheckoutForm();
     renderSuccessPage();
     bindHeaderScroll();
