@@ -441,6 +441,11 @@ function renderProductCard(product, options = {}) {
   <a href="/products/${product.slug}" class="product-image-wrap">
     <img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" loading="lazy" />
     <span class="product-badge">${escapeHtml(product.badge || "Featured")}</span>
+    ${
+      discountPercent(product) > 0
+        ? `<span class="product-discount">-${discountPercent(product)}%</span>`
+        : ""
+    }
   </a>
 
   <div class="product-body">
@@ -697,6 +702,13 @@ function renderProductDetailPage(pathname, product) {
         <div>
           <span class="old-price">${formatPrice(product.compareAtEur)}</span>
           <strong>${formatPrice(product.priceEur)}</strong>
+          ${
+            discountPercent(product) > 0
+              ? `<p class="detail-saving">Save ${formatPrice(
+                  product.compareAtEur - product.priceEur,
+                )} (${discountPercent(product)}%)</p>`
+              : ""
+          }
         </div>
         <span class="stock-pill">${product.stock} in stock</span>
       </div>
@@ -709,6 +721,7 @@ function renderProductDetailPage(pathname, product) {
         <label for="detailQty" class="sr-only">Quantity</label>
         <input id="detailQty" class="qty-input" type="number" min="1" max="20" value="1" />
         <button type="button" id="detailAddButton" class="btn-primary" data-product-id="${product.id}">Add to cart</button>
+        <button type="button" id="detailBuyNowButton" class="btn-secondary" data-product-id="${product.id}">Buy now</button>
       </div>
 
       <div class="trust-inline">
@@ -1350,6 +1363,20 @@ img { display: block; max-width: 100%; }
   padding: 0.3rem 0.58rem;
 }
 
+.product-discount {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.58rem;
+}
+
 .product-body {
   padding: 0.85rem;
 }
@@ -1725,6 +1752,13 @@ img { display: block; max-width: 100%; }
   font-size: 1.55rem;
 }
 
+.detail-saving {
+  margin: 0.2rem 0 0;
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .stock-pill {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -1754,6 +1788,7 @@ img { display: block; max-width: 100%; }
 .detail-actions {
   margin-top: 0.8rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.45rem;
 }
 
@@ -2493,19 +2528,33 @@ function renderGlobalScript() {
 
   function bindDetailAdd() {
     const button = document.getElementById('detailAddButton');
+    const buyNowButton = document.getElementById('detailBuyNowButton');
     const qtyInput = document.getElementById('detailQty');
-    if (!button || !qtyInput) {
+    if ((!button && !buyNowButton) || !qtyInput) {
       return;
     }
 
-    button.addEventListener('click', () => {
-      const id = button.getAttribute('data-product-id');
-      const qty = clampQty(Number.parseInt(qtyInput.value || '1', 10));
-      if (!id) {
+    function bind(buttonNode, redirectToCheckout) {
+      if (!buttonNode) {
         return;
       }
-      addToCart(id, qty);
-    });
+
+      buttonNode.addEventListener('click', () => {
+        const id = buttonNode.getAttribute('data-product-id');
+        const qty = clampQty(Number.parseInt(qtyInput.value || '1', 10));
+        if (!id) {
+          return;
+        }
+
+        addToCart(id, qty);
+        if (redirectToCheckout) {
+          window.location.href = '/checkout';
+        }
+      });
+    }
+
+    bind(button, false);
+    bind(buyNowButton, true);
   }
 
   function bindGalleryThumbs() {
@@ -2544,6 +2593,41 @@ function renderGlobalScript() {
 
     function getSortValue() {
       return sort ? sort.value : 'featured';
+    }
+
+    function setActiveChip(value) {
+      activeCategory = value;
+      chips.forEach((node) => {
+        const selected = (node.getAttribute('data-category-filter') || 'all') === value;
+        node.classList.toggle('active', selected);
+        node.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      });
+    }
+
+    function syncUrlState(query) {
+      const params = new URLSearchParams(window.location.search);
+      if (query) {
+        params.set('q', query);
+      } else {
+        params.delete('q');
+      }
+
+      if (activeCategory !== 'all') {
+        params.set('category', activeCategory);
+      } else {
+        params.delete('category');
+      }
+
+      const sortValue = getSortValue();
+      if (sortValue !== 'featured') {
+        params.set('sort', sortValue);
+      } else {
+        params.delete('sort');
+      }
+
+      const next = params.toString();
+      const target = window.location.pathname + (next ? '?' + next : '');
+      window.history.replaceState({}, '', target);
     }
 
     function compareCards(a, b, sortValue) {
@@ -2585,20 +2669,31 @@ function renderGlobalScript() {
       if (countNode) {
         countNode.textContent = visibleCards.length + ' products';
       }
+
+      syncUrlState(query);
     }
 
     chips.forEach((chip) => {
       chip.addEventListener('click', () => {
-        activeCategory = chip.getAttribute('data-category-filter') || 'all';
-        chips.forEach((node) => {
-          node.classList.remove('active');
-          node.setAttribute('aria-pressed', 'false');
-        });
-        chip.classList.add('active');
-        chip.setAttribute('aria-pressed', 'true');
+        setActiveChip(chip.getAttribute('data-category-filter') || 'all');
         runFilter();
       });
     });
+
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = params.get('q') || '';
+    const initialCategory = params.get('category') || 'all';
+    const initialSort = params.get('sort') || 'featured';
+
+    search.value = initialQuery;
+    if (sort && Array.from(sort.options).some((option) => option.value === initialSort)) {
+      sort.value = initialSort;
+    }
+
+    const hasCategoryChip = Array.from(chips).some(
+      (chip) => (chip.getAttribute('data-category-filter') || 'all') === initialCategory,
+    );
+    setActiveChip(hasCategoryChip ? initialCategory : 'all');
 
     search.addEventListener('input', runFilter);
     if (sort) {
