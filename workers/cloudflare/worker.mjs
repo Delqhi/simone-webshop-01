@@ -1,4 +1,4 @@
-const BUILD_DATE = "2026-02-26";
+const BUILD_DATE = "2026-02-27";
 
 const products = [
   {
@@ -6,9 +6,12 @@ const products = [
     name: "AeroPulse Recovery Sleeves",
     category: "Fitness",
     priceEur: 79.9,
+    compareAtEur: 109.0,
     trendScore: 93,
     grossMarginPct: 62,
     velocity: "high",
+    rating: 4.9,
+    reviewCount: 842,
     imageUrl:
       "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
     description: "Compression sleeves for workout recovery with strong repeat potential.",
@@ -18,9 +21,12 @@ const products = [
     name: "LumaQuiet Sleep Lamp",
     category: "Home",
     priceEur: 49.0,
+    compareAtEur: 69.0,
     trendScore: 88,
     grossMarginPct: 59,
     velocity: "medium",
+    rating: 4.7,
+    reviewCount: 516,
     imageUrl:
       "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
     description: "Warm night light with low-light mode and compact premium design.",
@@ -30,9 +36,12 @@ const products = [
     name: "PawOrbit Smart Feeder",
     category: "Pet",
     priceEur: 129.0,
+    compareAtEur: 169.0,
     trendScore: 90,
     grossMarginPct: 57,
     velocity: "high",
+    rating: 4.8,
+    reviewCount: 1204,
     imageUrl:
       "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1200&q=80",
     description: "Remote feeder with anti-jam mechanics and premium order value.",
@@ -42,9 +51,12 @@ const products = [
     name: "VoltFold Travel Dock",
     category: "Tech",
     priceEur: 89.0,
+    compareAtEur: 119.0,
     trendScore: 86,
     grossMarginPct: 61,
     velocity: "medium",
+    rating: 4.6,
+    reviewCount: 477,
     imageUrl:
       "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
     description: "Foldable charging dock for creators and mobile-first workflows.",
@@ -68,40 +80,61 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+function formatEur(value) {
+  return `EUR ${value.toFixed(2)}`;
+}
+
+function renderStars(rating) {
+  const rounded = Math.max(0, Math.min(5, Math.round(rating)));
+  return Array.from({ length: 5 })
+    .map((_, idx) =>
+      idx < rounded
+        ? '<span class="star star-filled">★</span>'
+        : '<span class="star">★</span>'
+    )
+    .join("");
+}
+
 function renderHomeHtml() {
   const productCards = products
-    .map(
-      (product) => `
-      <article class="card">
-        <div class="card-image-wrap">
+    .map((product) => {
+      const discount = Math.max(0, Math.round(((product.compareAtEur - product.priceEur) / product.compareAtEur) * 100));
+      return `
+      <article class="product-card">
+        <div class="product-image-wrap">
           <img src="${product.imageUrl}" alt="${product.name}" loading="lazy" />
-          <span class="card-badge">${product.category}</span>
+          <span class="product-badge">-${discount}%</span>
         </div>
-        <div class="card-body">
-          <div class="card-meta">
-            <span>${product.id}</span>
-            <span>Trend ${product.trendScore}</span>
-          </div>
+        <div class="product-body">
+          <p class="product-category">${product.category}</p>
           <h3>${product.name}</h3>
-          <p>${product.description}</p>
-          <div class="chips">
-            <span>Margin ${product.grossMarginPct}%</span>
-            <span>Velocity ${product.velocity}</span>
+          <p class="product-desc">${product.description}</p>
+          <div class="product-rating">
+            <span class="stars">${renderStars(product.rating)}</span>
+            <span>${product.rating.toFixed(1)} (${product.reviewCount})</span>
           </div>
-          <div class="card-foot">
-            <strong>EUR ${product.priceEur.toFixed(2)}</strong>
-            <button class="add-btn" data-id="${product.id}" data-price="${product.priceEur}" data-name="${product.name}">Add</button>
+          <div class="product-chips">
+            <span>Trend ${product.trendScore}</span>
+            <span>Margin ${product.grossMarginPct}%</span>
+            <span>${product.velocity} velocity</span>
+          </div>
+          <div class="product-foot">
+            <div>
+              <span class="old-price">${formatEur(product.compareAtEur)}</span>
+              <strong>${formatEur(product.priceEur)}</strong>
+            </div>
+            <button class="add-btn" data-id="${product.id}" data-price="${product.priceEur}" data-name="${product.name}">Add to Cart</button>
           </div>
         </div>
       </article>
-    `
-    )
+    `;
+    })
     .join("");
 
   const kpiRows = kpis
     .map(
       (kpi) => `
-      <div class="kpi">
+      <div class="kpi-card">
         <span>${kpi.label}</span>
         <strong>${kpi.value}</strong>
       </div>
@@ -115,264 +148,376 @@ function renderHomeHtml() {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Simone WorldBest Shop</title>
-    <meta name="description" content="Cloudflare-first storefront with real product cards and live cart UI." />
+    <meta name="description" content="Single-product inspired storefront with premium product cards and live cart." />
     <style>
       :root {
-        --bg: #f3f0e9;
-        --panel: #ffffff;
-        --ink: #14263c;
-        --muted: #596b80;
-        --line: #d7dee8;
-        --brand: #cd4b28;
-        --brand-dark: #993318;
-        --hero-a: #10273f;
-        --hero-b: #1d4268;
+        --cream: #fdfbf7;
+        --cream-dark: #f5f2eb;
+        --ink: #121212;
+        --ink-light: #4b5563;
+        --line: #e5ded2;
+        --gold: #d4af37;
       }
       * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
       body {
         margin: 0;
-        font-family: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
         color: var(--ink);
+        font-family: "Inter", "Avenir Next", "Segoe UI", sans-serif;
         background:
-          radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 45%),
-          radial-gradient(circle at 100% 0%, rgba(245, 177, 150, 0.72) 0%, transparent 35%),
-          var(--bg);
+          radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95) 0%, transparent 42%),
+          radial-gradient(circle at 100% 12%, rgba(212, 175, 55, 0.12) 0%, transparent 42%),
+          var(--cream);
+      }
+      h1, h2, h3 {
+        margin: 0;
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
       }
       .shell {
-        max-width: 1140px;
+        width: 100%;
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 1rem 1rem 3rem;
+        padding: 1rem 1rem 4rem;
       }
       .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 25;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
+        min-height: 4.2rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(12px);
       }
       .logo {
-        font-weight: 800;
-        font-size: 1.12rem;
-        letter-spacing: 0.01em;
+        font-size: 1.28rem;
+        font-weight: 700;
       }
-      .logo span { color: var(--brand); }
+      .logo span { color: var(--ink-light); font-size: 0.75em; letter-spacing: 0.06em; }
       .top-actions {
         display: flex;
-        gap: 0.45rem;
+        align-items: center;
+        gap: 0.4rem;
         flex-wrap: wrap;
       }
       .top-actions a {
-        text-decoration: none;
-        color: var(--muted);
         border: 1px solid var(--line);
         border-radius: 999px;
-        padding: 0.33rem 0.75rem;
-        font-size: 0.85rem;
+        padding: 0.45rem 0.78rem;
+        text-decoration: none;
+        color: var(--ink-light);
+        font-size: 0.82rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.7);
       }
       .hero {
-        margin-top: 0.8rem;
-        border-radius: 24px;
-        padding: 1.25rem;
-        color: #fff;
-        background: linear-gradient(130deg, var(--hero-a), var(--hero-b));
-        box-shadow: 0 18px 44px rgba(17, 34, 55, 0.2);
+        margin-top: 0.85rem;
+        border: 1px solid var(--line);
+        border-radius: 34px;
+        padding: 1.4rem;
+        background: linear-gradient(135deg, #f8f5ef 0%, #ffffff 50%, #f3ede3 100%);
+        box-shadow: 0 22px 52px rgba(16, 16, 16, 0.1);
       }
       .hero-grid {
         display: grid;
-        gap: 1rem;
-        grid-template-columns: 1.3fr 1fr;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 1.2rem;
+        align-items: center;
       }
-      .badge {
+      .hero-badge {
         display: inline-flex;
+        align-items: center;
+        gap: 0.42rem;
         border-radius: 999px;
-        padding: 0.3rem 0.6rem;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.1);
-        font-size: 0.82rem;
+        border: 1px solid rgba(16, 185, 129, 0.36);
+        background: rgba(236, 253, 245, 0.9);
+        color: #047857;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0.38rem 0.7rem;
+      }
+      .hero-badge::before {
+        content: "";
+        width: 0.45rem;
+        height: 0.45rem;
+        border-radius: 999px;
+        background: #10b981;
       }
       .hero h1 {
-        margin: 0.65rem 0 0;
-        font-size: clamp(2rem, 4.2vw, 3.3rem);
-        line-height: 1.02;
+        margin-top: 0.8rem;
+        font-size: clamp(2rem, 4.3vw, 3.85rem);
       }
       .hero p {
-        color: #d8e7fa;
-        margin: 0.7rem 0 0;
+        margin: 0.85rem 0 0;
+        color: var(--ink-light);
+        line-height: 1.7;
         max-width: 60ch;
       }
-      .hero-cta {
+      .hero-actions {
+        margin-top: 1rem;
         display: flex;
         gap: 0.55rem;
         flex-wrap: wrap;
-        margin-top: 1rem;
       }
-      .hero-cta a {
-        border-radius: 10px;
+      .hero-actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
         text-decoration: none;
-        padding: 0.55rem 0.9rem;
         font-weight: 700;
+        font-size: 0.84rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0.75rem 1rem;
       }
-      .hero-cta .primary {
-        background: var(--brand);
+      .hero-actions .primary {
+        border: 1px solid #111;
+        background: #111;
         color: #fff;
       }
-      .hero-cta .secondary {
-        color: #dceafc;
-        border: 1px solid rgba(220, 234, 252, 0.4);
+      .hero-actions .secondary {
+        border: 1px solid #d1d5db;
+        background: rgba(255, 255, 255, 0.85);
+        color: var(--ink);
       }
-      .hero-panel {
-        border: 1px solid rgba(220, 234, 252, 0.25);
-        border-radius: 14px;
-        background: rgba(9, 21, 36, 0.35);
-        padding: 0.8rem;
-      }
-      .hero-panel h3 {
-        margin: 0;
-        font-size: 0.95rem;
-      }
-      .hero-panel ul {
-        list-style: none;
-        padding: 0;
-        margin: 0.6rem 0 0;
-        display: grid;
-        gap: 0.44rem;
-      }
-      .hero-panel li {
+      .hero-trust {
+        margin-top: 0.95rem;
         display: flex;
-        justify-content: space-between;
-        font-size: 0.86rem;
-        color: #d9e8fb;
+        flex-wrap: wrap;
+        gap: 0.48rem;
       }
-      .kpis {
-        margin-top: 0.9rem;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.55rem;
-      }
-      .kpi {
-        border-radius: 12px;
-        border: 1px solid rgba(220, 234, 252, 0.25);
-        background: rgba(8, 20, 35, 0.25);
-        padding: 0.58rem 0.65rem;
-      }
-      .kpi span {
-        display: block;
-        color: #bad2f1;
-        font-size: 0.74rem;
-      }
-      .kpi strong {
-        font-size: 0.98rem;
-      }
-      .section-head {
-        margin: 1.3rem 0 0.7rem;
-      }
-      .section-head h2 {
-        margin: 0;
-        font-size: 1.5rem;
-      }
-      .section-head p {
-        margin: 0.28rem 0 0;
-        color: var(--muted);
-      }
-      .grid {
-        display: grid;
-        gap: 0.85rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .card {
-        background: var(--panel);
+      .hero-trust span {
+        border-radius: 999px;
         border: 1px solid var(--line);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 8px 20px rgba(18, 34, 54, 0.05);
+        background: rgba(255, 255, 255, 0.8);
+        color: var(--ink-light);
+        font-size: 0.74rem;
+        padding: 0.33rem 0.62rem;
       }
-      .card-image-wrap {
+      .hero-visual {
         position: relative;
-        aspect-ratio: 4 / 3;
+        aspect-ratio: 1;
+        border-radius: 28px;
         overflow: hidden;
-        background: #e8eef7;
+        background: #ddd;
       }
-      .card-image-wrap img {
+      .hero-visual img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.35s ease;
+        transform: scale(1.01);
       }
-      .card:hover .card-image-wrap img {
-        transform: scale(1.04);
-      }
-      .card-badge {
+      .visual-card {
         position: absolute;
-        top: 0.6rem;
-        left: 0.6rem;
-        border-radius: 999px;
-        padding: 0.26rem 0.55rem;
-        background: rgba(8, 20, 35, 0.72);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: #fff;
-        font-size: 0.75rem;
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.48);
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(10px);
+        padding: 0.8rem;
+        box-shadow: 0 12px 32px rgba(12, 12, 12, 0.14);
       }
-      .card-body {
-        padding: 0.82rem;
-      }
-      .card-meta {
-        display: flex;
-        justify-content: space-between;
-        color: #68798d;
-        font-size: 0.78rem;
-      }
-      .card h3 {
-        margin: 0.42rem 0;
-        font-size: 1.1rem;
-      }
-      .card p {
+      .visual-card p {
         margin: 0;
-        color: var(--muted);
-        min-height: 2.5rem;
       }
-      .chips {
+      .visual-card .muted {
+        font-size: 0.7rem;
+        color: var(--ink-light);
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      .visual-card .strong {
+        margin-top: 0.2rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+      .kpis {
+        margin-top: 0.95rem;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+      .kpi-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.74);
+        padding: 0.65rem 0.72rem;
+      }
+      .kpi-card span {
+        display: block;
+        color: var(--ink-light);
+        font-size: 0.74rem;
+      }
+      .kpi-card strong {
+        margin-top: 0.12rem;
+        display: block;
+        font-size: 1rem;
+      }
+      .section-head {
+        margin: 1.45rem 0 0.75rem;
+      }
+      .section-head .eyebrow {
+        margin: 0;
+        color: var(--ink-light);
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+      }
+      .section-head h2 {
+        margin-top: 0.35rem;
+        font-size: clamp(1.7rem, 3.2vw, 2.55rem);
+      }
+      .section-head p {
+        margin: 0.45rem 0 0;
+        color: var(--ink-light);
+      }
+      .product-grid {
+        display: grid;
+        gap: 0.9rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .product-card {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 12px 28px rgba(18, 18, 18, 0.08);
+      }
+      .product-image-wrap {
+        position: relative;
+        aspect-ratio: 1;
+        background: var(--cream-dark);
+        overflow: hidden;
+      }
+      .product-image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+      }
+      .product-card:hover .product-image-wrap img {
+        transform: scale(1.06);
+      }
+      .product-badge {
+        position: absolute;
+        left: 0.7rem;
+        top: 0.7rem;
+        border-radius: 999px;
+        background: #111;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.3rem 0.6rem;
+      }
+      .product-body {
+        padding: 0.9rem;
+      }
+      .product-category {
+        margin: 0;
+        color: var(--ink-light);
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        font-size: 0.7rem;
+        font-weight: 700;
+      }
+      .product-card h3 {
+        margin-top: 0.25rem;
+        font-size: 1.23rem;
+      }
+      .product-desc {
+        margin: 0.42rem 0 0;
+        min-height: 2.45rem;
+        color: var(--ink-light);
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+      .product-rating {
         margin-top: 0.55rem;
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.34rem;
-      }
-      .chips span {
-        border: 1px solid #d3dce8;
-        border-radius: 999px;
-        background: #f7faff;
-        color: #5f7084;
-        padding: 0.2rem 0.55rem;
-        font-size: 0.76rem;
-      }
-      .card-foot {
-        margin-top: 0.65rem;
-        display: flex;
-        justify-content: space-between;
         align-items: center;
+        gap: 0.4rem;
+        color: var(--ink-light);
+        font-size: 0.8rem;
       }
-      .card-foot strong {
-        font-size: 1.2rem;
+      .stars {
+        display: inline-flex;
+        gap: 0.05rem;
+      }
+      .star {
+        color: #d1d5db;
+        font-size: 0.78rem;
+      }
+      .star-filled {
+        color: var(--gold);
+      }
+      .product-chips {
+        margin-top: 0.58rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+      }
+      .product-chips span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--ink-light);
+        font-size: 0.72rem;
+        padding: 0.24rem 0.52rem;
+      }
+      .product-foot {
+        margin-top: 0.72rem;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .product-foot .old-price {
+        display: block;
+        font-size: 0.77rem;
+        text-decoration: line-through;
+        color: #9ca3af;
+      }
+      .product-foot strong {
+        display: block;
+        font-size: 1.28rem;
       }
       .add-btn {
-        border: 0;
-        border-radius: 10px;
-        background: var(--brand);
+        border: 1px solid #111;
+        border-radius: 999px;
+        background: #111;
         color: #fff;
         font-weight: 700;
-        padding: 0.48rem 0.82rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 0.6rem 0.86rem;
         cursor: pointer;
       }
-      .add-btn:hover { background: var(--brand-dark); }
+      .add-btn:hover { background: #2a2a2a; }
       .cart {
         position: fixed;
         right: 1rem;
         bottom: 1rem;
-        width: min(320px, calc(100vw - 2rem));
-        background: rgba(16, 34, 55, 0.95);
-        color: #fff;
+        width: min(340px, calc(100vw - 2rem));
+        border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 14px;
-        padding: 0.75rem;
-        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+        background: rgba(18, 18, 18, 0.92);
+        color: #fff;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 20px 38px rgba(0, 0, 0, 0.3);
+        padding: 0.82rem;
       }
       .cart-head {
         display: flex;
@@ -381,52 +526,59 @@ function renderHomeHtml() {
       }
       .cart-head h3 {
         margin: 0;
-        font-size: 0.95rem;
+        font-size: 0.98rem;
       }
       .cart-count {
         border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 0.2rem 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        padding: 0.2rem 0.52rem;
         font-size: 0.78rem;
       }
       .cart-items {
-        margin-top: 0.55rem;
-        max-height: 160px;
+        margin-top: 0.52rem;
+        max-height: 168px;
         overflow: auto;
         display: grid;
-        gap: 0.35rem;
+        gap: 0.34rem;
       }
       .cart-item {
         display: flex;
         justify-content: space-between;
+        color: #e8e8e8;
         font-size: 0.82rem;
-        color: #d9e6f8;
       }
       .cart-total {
-        margin-top: 0.55rem;
-        padding-top: 0.55rem;
+        margin-top: 0.62rem;
+        padding-top: 0.6rem;
         border-top: 1px dashed rgba(255, 255, 255, 0.3);
         display: flex;
         justify-content: space-between;
         font-weight: 700;
       }
       footer {
-        margin-top: 1.3rem;
-        color: var(--muted);
+        margin-top: 1.2rem;
+        color: var(--ink-light);
         font-size: 0.85rem;
       }
       code {
-        background: #e9f0fa;
         border-radius: 5px;
+        background: rgba(0, 0, 0, 0.07);
         padding: 0.1rem 0.34rem;
       }
-      @media (max-width: 940px) {
+      @media (max-width: 980px) {
         .hero-grid { grid-template-columns: 1fr; }
         .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
-      @media (max-width: 740px) {
-        .grid, .kpis { grid-template-columns: 1fr; }
-        .cart { position: static; width: 100%; margin-top: 1rem; }
+      @media (max-width: 760px) {
+        .product-grid,
+        .kpis {
+          grid-template-columns: 1fr;
+        }
+        .cart {
+          position: static;
+          margin-top: 1rem;
+          width: 100%;
+        }
       }
     </style>
   </head>
@@ -444,35 +596,40 @@ function renderHomeHtml() {
       <section class="hero">
         <div class="hero-grid">
           <div>
-            <span class="badge">Cloudflare Production Build ${BUILD_DATE}</span>
-            <h1>Premium product cards with live cart and real visuals.</h1>
+            <span class="hero-badge">Production Build ${BUILD_DATE}</span>
+            <h1>Single-product inspired commerce look. Fast, clear, premium.</h1>
             <p>
-              Fast storefront, cleaner UI system, stronger card hierarchy, and working
-              cart interactions without fake enterprise filler.
+              Product-first layout, premium cards with real imagery, and direct cart interactions
+              on a Cloudflare Worker runtime.
             </p>
-            <div class="hero-cta">
+            <div class="hero-actions">
               <a class="primary" href="#products">Browse Catalog</a>
               <a class="secondary" href="/api/products">View Product API</a>
             </div>
+            <div class="hero-trust">
+              <span>Free Express Shipping</span>
+              <span>2-Year Warranty</span>
+              <span>30-Day Returns</span>
+            </div>
           </div>
-          <aside class="hero-panel">
-            <h3>Ops Snapshot</h3>
-            <ul>
-              <li><span>Trend candidates</span><strong>41 today</strong></li>
-              <li><span>Supplier dispatch p95</span><strong>4m 10s</strong></li>
-              <li><span>Critical DLQ 24h</span><strong>0</strong></li>
-              <li><span>Checkout uptime</span><strong>99.95%</strong></li>
-            </ul>
-          </aside>
+
+          <div class="hero-visual">
+            <img src="${products[0].imageUrl}" alt="Featured product visual" />
+            <div class="visual-card">
+              <p class="muted">Sound Engineering</p>
+              <p class="strong">Studio-grade quality UI + cart flow</p>
+            </div>
+          </div>
         </div>
         <section class="kpis">${kpiRows}</section>
       </section>
 
       <section class="section-head" id="products">
-        <h2>Featured Products</h2>
-        <p>Every card now ships with image, pricing, metrics, and add-to-cart action.</p>
+        <p class="eyebrow">Featured Products</p>
+        <h2>Product cards with images, pricing, ratings, and real add-to-cart.</h2>
+        <p>Design language aligned to your single-product-shop reference.</p>
       </section>
-      <section class="grid">${productCards}</section>
+      <section class="product-grid">${productCards}</section>
 
       <footer>
         Endpoints: <code>/health</code> and <code>/api/products</code>
@@ -599,4 +756,3 @@ export default {
     });
   },
 };
-
