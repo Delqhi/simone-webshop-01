@@ -7,6 +7,13 @@ Stand: **26. Februar 2026**
 - Runtime: **Cloudflare Workers**
 - Canonical deployment record: `CLOUDFLARE.md`
 - Live URL: `https://delqhi.com`
+- Live storefront routes:
+  - `/` home
+  - `/products` catalog
+  - `/products/:slug` product detail
+  - `/cart` cart
+  - `/checkout` checkout
+  - `/order-success` success page
 - Deploy command:
 
 ```bash

@@ -1,6 +1,6 @@
 # Cloudflare Deployment Record
 
-Stand: **26.02.2026**
+Stand: **27.02.2026**
 
 ## Canonical Production Target
 
@@ -9,6 +9,7 @@ Stand: **26.02.2026**
 - Account subdomain: `aquawild-station.workers.dev` (technical endpoint, currently not primary)
 - Production route: `delqhi.com/*` -> `simone-worldbest-shop`
 - Live URL: `https://delqhi.com`
+- Current deployed commit: `4d46022`
 
 ## Deploy Command
 
@@ -19,7 +20,12 @@ pnpm deploy:cloudflare
 
 ## Runtime Endpoints
 
-- `/` -> storefront landing
+- `/` -> storefront home (hero, promo cards, featured products, sections)
+- `/products` -> full product catalog with search and category filters
+- `/products/:slug` -> product detail page with gallery and add-to-cart
+- `/cart` -> interactive cart with quantity controls
+- `/checkout` -> checkout form + order summary
+- `/order-success` -> purchase confirmation summary
 - `/health` -> runtime status JSON
 - `/api/products` -> product payload JSON
 
