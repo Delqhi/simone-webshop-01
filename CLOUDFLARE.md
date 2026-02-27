@@ -9,7 +9,7 @@ Stand: **27.02.2026**
 - Account subdomain: `aquawild-station.workers.dev` (technical endpoint, currently not primary)
 - Production route: `delqhi.com/*` -> `simone-worldbest-shop`
 - Live URL: `https://delqhi.com`
-- Current deployed commit: `4d46022`
+- Current deployed commit: `0c5181a`
 
 ## Deploy Command
 
