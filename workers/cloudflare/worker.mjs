@@ -435,7 +435,9 @@ function renderProductCard(product, options = {}) {
   return `
 <article class="${cardClass}" data-product-card data-name="${escapeHtml(
     (product.name + " " + product.description).toLowerCase(),
-  )}" data-category="${escapeHtml(product.category)}">
+  )}" data-category="${escapeHtml(product.category)}" data-price="${product.priceEur}" data-rating="${
+    product.rating
+  }">
   <a href="/products/${product.slug}" class="product-image-wrap">
     <img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" loading="lazy" />
     <span class="product-badge">${escapeHtml(product.badge || "Featured")}</span>
@@ -605,7 +607,21 @@ function renderProductsPage(pathname) {
   <p>Use category chips and search to quickly find matching products.</p>
 
   <div class="catalog-controls" role="search">
-    <input id="catalogSearch" class="catalog-search" type="search" placeholder="Search products..." aria-label="Search products" />
+    <div class="catalog-toolbar">
+      <input id="catalogSearch" class="catalog-search" type="search" placeholder="Search products..." aria-label="Search products" />
+
+      <label class="catalog-sort-wrap" for="catalogSort">
+        <span>Sort by</span>
+        <select id="catalogSort" class="catalog-sort" aria-label="Sort products">
+          <option value="featured">Featured</option>
+          <option value="price-asc">Price low to high</option>
+          <option value="price-desc">Price high to low</option>
+          <option value="rating-desc">Top rated</option>
+          <option value="name-asc">Name A-Z</option>
+        </select>
+      </label>
+    </div>
+
     <div class="category-chips" id="categoryChips">
       <button type="button" class="chip active" data-category-filter="all" aria-pressed="true">All</button>
       ${CATEGORIES.map(
@@ -757,6 +773,12 @@ function renderCartPage(pathname) {
 
     <aside class="cart-summary">
       <h2>Order Summary</h2>
+      <div class="shipping-progress" id="cartShippingProgress">
+        <p id="cartShippingProgressText">Add products to unlock free shipping.</p>
+        <div class="shipping-progress-track" aria-hidden="true">
+          <div class="shipping-progress-fill" id="cartShippingProgressFill"></div>
+        </div>
+      </div>
       <div class="summary-row"><span>Subtotal</span><strong id="cartSubtotal">€0</strong></div>
       <div class="summary-row"><span>Shipping</span><strong id="cartShipping">€0</strong></div>
       <div class="summary-row total"><span>Total</span><strong id="cartGrandTotal">€0</strong></div>
@@ -764,6 +786,14 @@ function renderCartPage(pathname) {
       <p class="summary-note">Secure checkout with transparent pricing and no hidden fees.</p>
     </aside>
   </div>
+
+  <section class="cart-recommendations" id="cartRecommendations" hidden>
+    <div class="section-header">
+      <p class="eyebrow">You may also like</p>
+      <h2>Complete your setup</h2>
+    </div>
+    <div class="cart-reco-grid" id="cartRecoGrid"></div>
+  </section>
 
   <div class="cart-empty" id="cartEmpty" hidden>
     <h2>Your cart is empty</h2>
@@ -818,6 +848,12 @@ function renderCheckoutPage(pathname) {
 
     <aside class="cart-summary">
       <h2>Checkout Summary</h2>
+      <div class="shipping-progress" id="checkoutShippingProgress">
+        <p id="checkoutShippingProgressText">Add products to unlock free shipping.</p>
+        <div class="shipping-progress-track" aria-hidden="true">
+          <div class="shipping-progress-fill" id="checkoutShippingProgressFill"></div>
+        </div>
+      </div>
       <div id="checkoutItems" class="checkout-item-list"></div>
       <div class="summary-row"><span>Subtotal</span><strong id="checkoutSubtotal">€0</strong></div>
       <div class="summary-row"><span>Shipping</span><strong id="checkoutShipping">€0</strong></div>
@@ -1502,6 +1538,11 @@ img { display: block; max-width: 100%; }
   gap: 0.55rem;
 }
 
+.catalog-toolbar {
+  display: grid;
+  gap: 0.55rem;
+}
+
 .catalog-search {
   width: 100%;
   min-height: 2.8rem;
@@ -1513,6 +1554,32 @@ img { display: block; max-width: 100%; }
 }
 
 .catalog-search:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 2px;
+}
+
+.catalog-sort-wrap {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.catalog-sort {
+  min-height: 2.8rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.95rem;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.catalog-sort:focus-visible {
   outline: 2px solid #111;
   outline-offset: 2px;
 }
@@ -1841,6 +1908,37 @@ img { display: block; max-width: 100%; }
   font-size: 1.35rem;
 }
 
+.shipping-progress {
+  margin-top: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 0.55rem 0.65rem;
+}
+
+.shipping-progress p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.shipping-progress-track {
+  margin-top: 0.45rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #ebe5d9;
+  overflow: hidden;
+}
+
+.shipping-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #111, #3b3b3b);
+  transition: width 200ms ease;
+}
+
 .summary-row {
   margin-top: 0.52rem;
   display: flex;
@@ -1882,6 +1980,73 @@ img { display: block; max-width: 100%; }
 
 .cart-empty .btn-primary {
   margin-top: 0.75rem;
+}
+
+.cart-recommendations {
+  margin-top: 1.2rem;
+}
+
+.cart-reco-grid {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.cart-reco-card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.cart-reco-card img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  background: var(--cream-dark);
+}
+
+.cart-reco-body {
+  padding: 0.7rem;
+}
+
+.cart-reco-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cart-reco-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.cart-reco-meta {
+  margin: 0.2rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.76rem;
+}
+
+.cart-reco-foot {
+  margin-top: 0.52rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.cart-reco-price {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.cart-reco-foot .btn-primary {
+  min-height: 2.4rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.72rem;
 }
 
 .checkout-layout {
@@ -2099,6 +2264,10 @@ img { display: block; max-width: 100%; }
 
 @media (min-width: 840px) {
   .desktop-nav { display: flex; }
+  .catalog-toolbar {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    align-items: end;
+  }
   .hero-grid {
     grid-template-columns: 1.1fr 0.9fr;
     align-items: center;
@@ -2118,6 +2287,9 @@ img { display: block; max-width: 100%; }
   .checkout-layout {
     grid-template-columns: 1.3fr 0.7fr;
     align-items: start;
+  }
+  .cart-reco-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .footer-grid {
     grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -2164,6 +2336,13 @@ function renderGlobalScript() {
   const PRODUCT_BY_ID = new Map(SHOP_PRODUCTS.map((product) => [product.id, product]));
   const CART_KEY = 'aurum_shop_cart_v1';
   const LAST_ORDER_KEY = 'aurum_shop_last_order_v1';
+  const FREE_SHIPPING_THRESHOLD = 50;
+  const MAX_ITEM_QTY = 20;
+
+  function clampQty(value) {
+    const normalized = Number.isFinite(value) ? Math.round(value) : 1;
+    return Math.max(1, Math.min(MAX_ITEM_QTY, normalized));
+  }
 
   function formatPrice(value) {
     return new Intl.NumberFormat('de-DE', {
@@ -2180,7 +2359,9 @@ function renderGlobalScript() {
       if (!Array.isArray(parsed)) {
         return [];
       }
-      return parsed.filter((item) => PRODUCT_BY_ID.has(item.id) && Number(item.qty) > 0).map((item) => ({ id: item.id, qty: Number(item.qty) }));
+      return parsed
+        .filter((item) => PRODUCT_BY_ID.has(item.id) && Number(item.qty) > 0)
+        .map((item) => ({ id: item.id, qty: clampQty(Number(item.qty)) }));
     } catch {
       return [];
     }
@@ -2205,7 +2386,24 @@ function renderGlobalScript() {
   }
 
   function shippingCost(subtotal) {
-    return subtotal >= 50 ? 0 : 4.99;
+    return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 4.99;
+  }
+
+  function renderShippingProgress(prefix, subtotal) {
+    const textNode = document.getElementById(prefix + 'ShippingProgressText');
+    const fillNode = document.getElementById(prefix + 'ShippingProgressFill');
+    if (!textNode || !fillNode) {
+      return;
+    }
+
+    const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+    const percent = Math.max(0, Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100));
+
+    fillNode.style.width = percent.toFixed(2) + '%';
+    textNode.textContent =
+      remaining === 0
+        ? 'You unlocked free shipping.'
+        : 'Add ' + formatPrice(remaining) + ' for free shipping.';
   }
 
   function syncCartBadges() {
@@ -2241,12 +2439,13 @@ function renderGlobalScript() {
       return;
     }
 
+    const nextQty = clampQty(Number(qty));
     const items = readCart();
     const existing = items.find((item) => item.id === productId);
     if (existing) {
-      existing.qty += qty;
+      existing.qty = clampQty(existing.qty + nextQty);
     } else {
-      items.push({ id: productId, qty });
+      items.push({ id: productId, qty: nextQty });
     }
     writeCart(items);
     syncCartBadges();
@@ -2264,7 +2463,7 @@ function renderGlobalScript() {
       const filtered = items.filter((item) => item.id !== productId);
       writeCart(filtered);
     } else {
-      target.qty = nextQty;
+      target.qty = clampQty(nextQty);
       writeCart(items);
     }
     syncCartBadges();
@@ -2301,7 +2500,7 @@ function renderGlobalScript() {
 
     button.addEventListener('click', () => {
       const id = button.getAttribute('data-product-id');
-      const qty = Math.max(1, Number.parseInt(qtyInput.value || '1', 10));
+      const qty = clampQty(Number.parseInt(qtyInput.value || '1', 10));
       if (!id) {
         return;
       }
@@ -2331,19 +2530,40 @@ function renderGlobalScript() {
 
   function bindCatalogFilters() {
     const search = document.getElementById('catalogSearch');
+    const sort = document.getElementById('catalogSort');
+    const grid = document.getElementById('catalogGrid');
     const countNode = document.getElementById('catalogCount');
     const chips = document.querySelectorAll('[data-category-filter]');
     const cards = Array.from(document.querySelectorAll('[data-product-card]'));
 
-    if (!search || cards.length === 0 || chips.length === 0) {
+    if (!search || cards.length === 0 || chips.length === 0 || !grid) {
       return;
     }
 
     let activeCategory = 'all';
 
+    function getSortValue() {
+      return sort ? sort.value : 'featured';
+    }
+
+    function compareCards(a, b, sortValue) {
+      const priceA = Number.parseFloat(a.getAttribute('data-price') || '0');
+      const priceB = Number.parseFloat(b.getAttribute('data-price') || '0');
+      const ratingA = Number.parseFloat(a.getAttribute('data-rating') || '0');
+      const ratingB = Number.parseFloat(b.getAttribute('data-rating') || '0');
+      const nameA = (a.querySelector('.product-title')?.textContent || '').toLowerCase();
+      const nameB = (b.querySelector('.product-title')?.textContent || '').toLowerCase();
+
+      if (sortValue === 'price-asc') return priceA - priceB;
+      if (sortValue === 'price-desc') return priceB - priceA;
+      if (sortValue === 'rating-desc') return ratingB - ratingA;
+      if (sortValue === 'name-asc') return nameA.localeCompare(nameB, 'de');
+      return 0;
+    }
+
     function runFilter() {
       const query = (search.value || '').trim().toLowerCase();
-      let visible = 0;
+      const visibleCards = [];
 
       cards.forEach((card) => {
         const category = card.getAttribute('data-category') || '';
@@ -2353,12 +2573,17 @@ function renderGlobalScript() {
         const show = categoryOk && queryOk;
         card.style.display = show ? '' : 'none';
         if (show) {
-          visible += 1;
+          visibleCards.push(card);
         }
       });
 
+      const sortedCards = [...visibleCards].sort((a, b) => compareCards(a, b, getSortValue()));
+      sortedCards.forEach((card) => {
+        grid.appendChild(card);
+      });
+
       if (countNode) {
-        countNode.textContent = visible + ' products';
+        countNode.textContent = visibleCards.length + ' products';
       }
     }
 
@@ -2376,6 +2601,9 @@ function renderGlobalScript() {
     });
 
     search.addEventListener('input', runFilter);
+    if (sort) {
+      sort.addEventListener('change', runFilter);
+    }
     runFilter();
   }
 
@@ -2388,6 +2616,8 @@ function renderGlobalScript() {
     const layout = document.getElementById('cartLayout');
     const empty = document.getElementById('cartEmpty');
     const list = document.getElementById('cartItemsList');
+    const recommendations = document.getElementById('cartRecommendations');
+    const recoGrid = document.getElementById('cartRecoGrid');
     const subtotalNode = document.getElementById('cartSubtotal');
     const shippingNode = document.getElementById('cartShipping');
     const totalNode = document.getElementById('cartGrandTotal');
@@ -2400,15 +2630,19 @@ function renderGlobalScript() {
     if (items.length === 0) {
       layout.hidden = true;
       empty.hidden = false;
+      if (recommendations) recommendations.hidden = true;
+      if (recoGrid) recoGrid.innerHTML = '';
       list.innerHTML = '';
       subtotalNode.textContent = formatPrice(0);
       shippingNode.textContent = formatPrice(0);
       totalNode.textContent = formatPrice(0);
+      renderShippingProgress('cart', 0);
       return;
     }
 
     layout.hidden = false;
     empty.hidden = true;
+    if (recommendations) recommendations.hidden = false;
 
     list.innerHTML = '';
     items.forEach((item) => {
@@ -2442,6 +2676,52 @@ function renderGlobalScript() {
     subtotalNode.textContent = formatPrice(subtotal);
     shippingNode.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
     totalNode.textContent = formatPrice(subtotal + shipping);
+    renderShippingProgress('cart', subtotal);
+
+    if (recommendations && recoGrid) {
+      const cartIds = new Set(items.map((item) => item.id));
+      const suggested = SHOP_PRODUCTS.filter((product) => !cartIds.has(product.id)).slice(0, 3);
+
+      if (suggested.length === 0) {
+        recommendations.hidden = true;
+        recoGrid.innerHTML = '';
+      } else {
+        recommendations.hidden = false;
+        recoGrid.innerHTML = '';
+
+        suggested.forEach((product) => {
+          const article = document.createElement('article');
+          article.className = 'cart-reco-card';
+          article.innerHTML =
+            '<img src="' + product.imageUrl + '" alt="' + product.name + '">' +
+            '<div class="cart-reco-body">' +
+            '  <div class="cart-reco-top">' +
+            '    <div>' +
+            '      <a class="cart-reco-title" href="/products/' + product.slug + '">' + product.name + '</a>' +
+            '      <p class="cart-reco-meta">' + product.category + '</p>' +
+            '    </div>' +
+            '  </div>' +
+            '  <div class="cart-reco-foot">' +
+            '    <strong class="cart-reco-price">' + formatPrice(product.priceEur) + '</strong>' +
+            '    <button type="button" class="btn-primary js-reco-add" data-product-id="' + product.id + '">Add</button>' +
+            '  </div>' +
+            '</div>';
+          recoGrid.appendChild(article);
+        });
+
+        recoGrid.querySelectorAll('.js-reco-add').forEach((button) => {
+          button.addEventListener('click', () => {
+            const id = button.getAttribute('data-product-id');
+            if (!id) {
+              return;
+            }
+            addToCart(id, 1);
+            renderCartPage();
+            renderCheckoutSummary();
+          });
+        });
+      }
+    }
 
     list.querySelectorAll('[data-cart-action]').forEach((control) => {
       control.addEventListener('click', () => {
@@ -2492,6 +2772,7 @@ function renderGlobalScript() {
       subtotalNode.textContent = formatPrice(0);
       shippingNode.textContent = formatPrice(0);
       totalNode.textContent = formatPrice(0);
+      renderShippingProgress('checkout', 0);
       return;
     }
 
@@ -2518,6 +2799,7 @@ function renderGlobalScript() {
     subtotalNode.textContent = formatPrice(subtotal);
     shippingNode.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
     totalNode.textContent = formatPrice(subtotal + shipping);
+    renderShippingProgress('checkout', subtotal);
   }
 
   function bindCheckoutForm() {
