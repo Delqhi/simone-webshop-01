@@ -46,16 +46,13 @@ const SERVICE_SIGNALS = [
 export function Footer() {
   return (
     <footer className="mt-20 border-t border-brand-border bg-brand-surface/90">
-      <div className="shell-container py-11">
-        <div className="grid gap-8 md:grid-cols-5">
+      <div className="shell-container py-12">
+        <div className="grid gap-9 md:grid-cols-5">
           <section className="md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-2">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-border-strong bg-white text-sm font-semibold text-brand-accent">
-                SS
-              </span>
               <span className="leading-none">
-                <span className="block text-lg font-semibold text-brand-text">Simone Shop</span>
-                <span className="block text-[0.68rem] uppercase tracking-[0.2em] text-brand-text-muted">Premium Commerce</span>
+                <span className="block text-xl font-bold tracking-tight text-brand-text">Simone Shop</span>
+                <span className="block text-[0.66rem] uppercase tracking-[0.22em] text-brand-text-muted">Premium Commerce</span>
               </span>
             </Link>
             <p className="mt-4 max-w-md text-sm leading-6 text-brand-text-muted">
@@ -64,7 +61,7 @@ export function Footer() {
             <div className="mt-5 flex flex-wrap gap-2">
               {TRUST_FACTS.map((fact) => (
                 <p key={fact.text} className="inline-flex items-center gap-2 rounded-full border border-brand-border bg-white/90 px-3 py-1.5 text-xs font-semibold text-brand-text">
-                  <fact.icon className="h-4 w-4 text-brand-accent" />
+                  <fact.icon className="h-4 w-4 text-brand-text" />
                   <span>{fact.text}</span>
                 </p>
               ))}
@@ -73,7 +70,7 @@ export function Footer() {
               {SERVICE_SIGNALS.map((signal) => (
                 <div key={signal.title} className="rounded-xl border border-brand-border bg-white/90 px-3 py-2 text-sm">
                   <p className="flex items-center gap-2 font-semibold text-brand-text">
-                    <signal.icon className="h-4 w-4 text-brand-accent" />
+                    <signal.icon className="h-4 w-4 text-brand-text" />
                     {signal.title}
                   </p>
                   <p className="mt-1 text-brand-text-muted">{signal.text}</p>

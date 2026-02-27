@@ -19,17 +19,17 @@ interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'size'> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: 'cta-primary shadow-sm',
-  secondary: 'bg-brand-text text-white hover:opacity-95',
+  secondary: 'rounded-full border border-black bg-black text-white hover:bg-zinc-800',
   outline: 'cta-secondary',
-  ghost: 'bg-transparent text-brand-text hover:bg-brand-bg-muted',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
+  ghost: 'rounded-full bg-transparent text-brand-text hover:bg-black/5',
+  danger: 'rounded-full bg-red-600 text-white hover:bg-red-700',
 }
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-5 py-2.5 text-base',
-  xl: 'px-6 py-3 text-lg',
+  sm: 'px-4 py-2 text-sm min-h-[2.5rem]',
+  md: 'px-5 py-2.5 text-sm min-h-[2.75rem]',
+  lg: 'px-7 py-3 text-base min-h-[3rem]',
+  xl: 'px-8 py-3.5 text-lg min-h-[3.25rem]',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -54,7 +54,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         whileHover={{ scale: disabled || isLoading ? 1 : 1.01 }}
         whileTap={{ scale: disabled || isLoading ? 1 : 0.99 }}
         className={cn(
-          'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150',
+          'inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-150',
           'disabled:cursor-not-allowed disabled:opacity-55',
           variantStyles[variant],
           sizeStyles[size],

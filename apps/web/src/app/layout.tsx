@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
-import { Fraunces, Manrope } from 'next/font/google'
+import { Inter, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -9,14 +9,14 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { DEFAULT_LOCALE, SITE_DESCRIPTION, SITE_NAME, getSiteUrl } from '@/lib/site'
 import { Providers } from './providers'
 
-const manrope = Manrope({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-manrope',
+  variable: '--font-inter',
 })
 
-const fraunces = Fraunces({
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
-  variable: '--font-fraunces',
+  variable: '--font-display',
 })
 
 const CartDrawer = dynamic(
@@ -102,7 +102,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0f8a74',
+  themeColor: '#101010',
 }
 
 export default function RootLayout({
@@ -112,7 +112,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de" suppressHydrationWarning>
-      <body className={`${manrope.variable} ${fraunces.variable} min-h-screen bg-brand-bg font-sans text-brand-text`}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} min-h-screen bg-brand-bg font-sans text-brand-text`}>
         <JsonLd id="org-jsonld" data={organizationJsonLd} />
         <JsonLd id="website-jsonld" data={websiteJsonLd} />
         <Providers>

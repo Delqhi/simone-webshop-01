@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Building2, Clock3, ShieldCheck, ShoppingBag } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowRight, Building2, Check, Clock3, Play, ShieldCheck, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { SEGMENT_COPY, SEGMENT_LABELS } from '@/features/segment'
 import type { CustomerSegment } from '@simone/contracts'
@@ -18,21 +19,20 @@ export function HeroSection({ segment, variant = 'control' }: HeroSectionProps) 
     variant === 'trust'
       ? `${copy.heroSubtitle} Klare Liefer- und Rückgaberegeln sind von Anfang an sichtbar.`
       : copy.heroSubtitle
-  const primaryCta = variant === 'trust' ? 'Sicher starten' : copy.primaryCta
-  const stats = [
-    { label: 'Checkout-Schritte', value: '3', icon: ShoppingBag },
-    { label: 'Support-Zielzeit', value: '< 24h', icon: Clock3 },
-    { label: 'Risikofreie Retoure', value: '30 Tage', icon: ShieldCheck },
-  ]
 
   return (
     <section className="shell-container pt-8 md:pt-12">
-      <div className="panel-elevated hero-grid-overlay overflow-hidden px-6 py-9 md:px-10 md:py-11">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-          <div className="stagger-enter">
-            <p className="kicker-badge">{copy.heroKicker}</p>
-            <h1 className="mt-4 max-w-3xl text-4xl leading-tight md:text-6xl">{title}</h1>
+      <div className="overflow-hidden rounded-[1.8rem] border border-brand-border bg-gradient-to-br from-stone-50 via-white to-stone-100 shadow-[var(--shadow-card)]">
+        <div className="grid gap-8 px-6 py-9 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-10 lg:py-12">
+          <div className="animate-reveal">
+            <p className="kicker-badge">
+              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse-soft" />
+              New Release 2026
+            </p>
+
+            <h1 className="mt-5 max-w-3xl text-balance text-4xl leading-tight md:text-6xl">{title}</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-brand-text-muted md:text-lg">{subtitle}</p>
+
             <div className="mt-5 flex flex-wrap gap-2">
               {copy.trustFocus.slice(0, 2).map((entry) => (
                 <span key={entry} className="trust-chip px-3 py-1.5 text-xs">
@@ -40,10 +40,11 @@ export function HeroSection({ segment, variant = 'control' }: HeroSectionProps) 
                 </span>
               ))}
             </div>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/products">
                 <Button size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
-                  {primaryCta}
+                  {copy.primaryCta}
                 </Button>
               </Link>
               <Link href={segment === 'b2b' ? '/versand' : '/rueckgabe'}>
@@ -52,41 +53,68 @@ export function HeroSection({ segment, variant = 'control' }: HeroSectionProps) 
                 </Button>
               </Link>
             </div>
+
+            <div className="mt-7 flex flex-wrap items-center gap-5 text-sm text-brand-text-muted">
+              <span className="inline-flex items-center gap-2">
+                <Check className="h-4 w-4 text-emerald-600" />
+                Free Express Shipping
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                2-Year Warranty
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Clock3 className="h-4 w-4 text-emerald-600" />
+                30-Day Returns
+              </span>
+            </div>
+
             <div className="mt-7 grid gap-3 sm:grid-cols-3">
-              {stats.map((item, index) => (
-                <div
-                  key={item.label}
-                  data-delay={String(index + 1)}
-                  className="stagger-enter rounded-2xl border border-brand-border bg-white/70 px-3 py-3"
-                >
-                  <item.icon className="h-4 w-4 text-brand-accent" />
-                  <p className="mt-2 text-xl font-semibold text-brand-text">{item.value}</p>
-                  <p className="text-xs text-brand-text-muted">{item.label}</p>
-                </div>
-              ))}
+              <div className="rounded-2xl border border-brand-border bg-white/80 px-3 py-3">
+                <ShoppingBag className="h-4 w-4 text-brand-accent" />
+                <p className="mt-2 text-xl font-semibold text-brand-text">3</p>
+                <p className="text-xs text-brand-text-muted">Checkout-Schritte</p>
+              </div>
+              <div className="rounded-2xl border border-brand-border bg-white/80 px-3 py-3">
+                <Clock3 className="h-4 w-4 text-brand-accent" />
+                <p className="mt-2 text-xl font-semibold text-brand-text">&lt; 24h</p>
+                <p className="text-xs text-brand-text-muted">Support-Zielzeit</p>
+              </div>
+              <div className="rounded-2xl border border-brand-border bg-white/80 px-3 py-3">
+                <Building2 className="h-4 w-4 text-brand-accent" />
+                <p className="mt-2 text-xl font-semibold text-brand-text">{SEGMENT_LABELS[segment]}</p>
+                <p className="text-xs text-brand-text-muted">Aktiver Modus</p>
+              </div>
             </div>
           </div>
 
-          <div className="panel-soft stagger-enter px-5 py-6" data-delay="2">
-            <p className="section-eyebrow">Aktiver Modus</p>
-            <p className="mt-1 text-2xl font-semibold text-brand-text">{SEGMENT_LABELS[segment]}</p>
-            <p className="mt-3 text-sm text-brand-text-muted">{copy.productHint}</p>
-            <ul className="mt-5 space-y-3 text-sm text-brand-text">
-              {copy.trustFocus.map((entry) => (
-                <li key={entry} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-accent" />
-                  <span>{entry}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-brand-border-strong bg-white/95 px-3 py-2 text-sm text-brand-text">
-                <ShoppingBag className="mb-2 h-4 w-4 text-brand-accent" />
-                Checkout in wenigen Schritten
-              </div>
-              <div className="rounded-xl border border-brand-border-strong bg-white/95 px-3 py-2 text-sm text-brand-text">
-                <Building2 className="mb-2 h-4 w-4 text-brand-accent" />
-                B2B-Felder nur bei Bedarf
+          <div className="animate-float">
+            <div className="group relative aspect-square overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-100 to-zinc-200 shadow-2xl">
+              <Image
+                src={
+                  segment === 'b2b'
+                    ? 'https://picsum.photos/seed/simone-b2b-hero/1200/1200'
+                    : 'https://picsum.photos/seed/simone-b2c-hero/1200/1200'
+                }
+                alt="Simone Shop Hero"
+                fill
+                sizes="(max-width: 1024px) 100vw, 45vw"
+                className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="glass-card absolute bottom-6 left-6 right-6 rounded-xl p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-text-muted">Commerce Intelligence</p>
+                    <p className="text-sm font-semibold text-brand-text">Trust-first funnel system</p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Play product story"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-transform hover:scale-105"
+                  >
+                    <Play className="ml-0.5 h-4 w-4 fill-current" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
