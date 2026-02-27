@@ -2,72 +2,41 @@ const BUILD_DATE = "2026-02-27";
 
 const products = [
   {
-    id: "SIM-AIR-001",
-    name: "AeroPulse Recovery Sleeves",
-    category: "Fitness",
-    priceEur: 79.9,
-    compareAtEur: 109.0,
-    trendScore: 93,
-    grossMarginPct: 62,
-    velocity: "high",
+    id: "AURUM-X1-GRA",
+    name: "AURUM X1 - Graphite",
+    category: "High-Precision Wireless Headphones",
+    priceEur: 599,
+    compareAtEur: 749,
     rating: 4.9,
-    reviewCount: 842,
+    reviewCount: 812,
     imageUrl:
-      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
-    description: "Compression sleeves for workout recovery with strong repeat potential.",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1600&q=90",
+    description: "Designed for absolute accuracy, engineered with aerospace-grade materials.",
   },
   {
-    id: "SIM-HOME-014",
-    name: "LumaQuiet Sleep Lamp",
-    category: "Home",
-    priceEur: 49.0,
-    compareAtEur: 69.0,
-    trendScore: 88,
-    grossMarginPct: 59,
-    velocity: "medium",
-    rating: 4.7,
+    id: "AURUM-X1-SIL",
+    name: "AURUM X1 - Silver",
+    category: "High-Precision Wireless Headphones",
+    priceEur: 599,
+    compareAtEur: 749,
+    rating: 4.8,
     reviewCount: 516,
     imageUrl:
-      "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
-    description: "Warm night light with low-light mode and compact premium design.",
+      "https://images.unsplash.com/photo-1496950866446-3253e1470e8e?auto=format&fit=crop&w=1600&q=90",
+    description: "Reference-grade tuning with premium finish and high comfort.",
   },
   {
-    id: "SIM-PET-077",
-    name: "PawOrbit Smart Feeder",
-    category: "Pet",
-    priceEur: 129.0,
-    compareAtEur: 169.0,
-    trendScore: 90,
-    grossMarginPct: 57,
-    velocity: "high",
-    rating: 4.8,
-    reviewCount: 1204,
+    id: "AURUM-X1-MID",
+    name: "AURUM X1 - Midnight",
+    category: "High-Precision Wireless Headphones",
+    priceEur: 599,
+    compareAtEur: 749,
+    rating: 4.9,
+    reviewCount: 1043,
     imageUrl:
-      "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1200&q=80",
-    description: "Remote feeder with anti-jam mechanics and premium order value.",
+      "https://images.unsplash.com/photo-1471478331149-c72f17e33c73?auto=format&fit=crop&w=1600&q=90",
+    description: "Built to perform from studio sessions to city commutes.",
   },
-  {
-    id: "SIM-TECH-021",
-    name: "VoltFold Travel Dock",
-    category: "Tech",
-    priceEur: 89.0,
-    compareAtEur: 119.0,
-    trendScore: 86,
-    grossMarginPct: 61,
-    velocity: "medium",
-    rating: 4.6,
-    reviewCount: 477,
-    imageUrl:
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
-    description: "Foldable charging dock for creators and mobile-first workflows.",
-  },
-];
-
-const kpis = [
-  { label: "Latency p95", value: "< 120ms" },
-  { label: "Checkout Uptime", value: "99.95%" },
-  { label: "Automation", value: "24/7" },
-  { label: "Margin Target", value: "> 58%" },
 ];
 
 function jsonResponse(data, status = 200) {
@@ -80,588 +49,325 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-function formatEur(value) {
-  return `EUR ${value.toFixed(2)}`;
-}
-
-function renderStars(rating) {
-  const rounded = Math.max(0, Math.min(5, Math.round(rating)));
-  return Array.from({ length: 5 })
-    .map((_, idx) =>
-      idx < rounded
-        ? '<span class="star star-filled">★</span>'
-        : '<span class="star">★</span>'
-    )
-    .join("");
-}
-
-function renderHomeHtml() {
-  const productCards = products
-    .map((product) => {
-      const discount = Math.max(0, Math.round(((product.compareAtEur - product.priceEur) / product.compareAtEur) * 100));
-      return `
-      <article class="product-card">
-        <div class="product-image-wrap">
-          <img src="${product.imageUrl}" alt="${product.name}" loading="lazy" />
-          <span class="product-badge">-${discount}%</span>
-        </div>
-        <div class="product-body">
-          <p class="product-category">${product.category}</p>
-          <h3>${product.name}</h3>
-          <p class="product-desc">${product.description}</p>
-          <div class="product-rating">
-            <span class="stars">${renderStars(product.rating)}</span>
-            <span>${product.rating.toFixed(1)} (${product.reviewCount})</span>
-          </div>
-          <div class="product-chips">
-            <span>Trend ${product.trendScore}</span>
-            <span>Margin ${product.grossMarginPct}%</span>
-            <span>${product.velocity} velocity</span>
-          </div>
-          <div class="product-foot">
-            <div>
-              <span class="old-price">${formatEur(product.compareAtEur)}</span>
-              <strong>${formatEur(product.priceEur)}</strong>
-            </div>
-            <button class="add-btn" data-id="${product.id}" data-price="${product.priceEur}" data-name="${product.name}">Add to Cart</button>
-          </div>
-        </div>
-      </article>
-    `;
-    })
-    .join("");
-
-  const kpiRows = kpis
-    .map(
-      (kpi) => `
-      <div class="kpi-card">
-        <span>${kpi.label}</span>
-        <strong>${kpi.value}</strong>
-      </div>
-    `
-    )
-    .join("");
+function renderShopHtml() {
+  const productsJson = JSON.stringify(products);
 
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Simone WorldBest Shop</title>
-    <meta name="description" content="Single-product inspired storefront with premium product cards and live cart." />
+    <title>AURUM X1 - Single Product Shop</title>
+    <meta name="description" content="AURUM X1 premium single-product storefront." />
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
       :root {
-        --cream: #fdfbf7;
-        --cream-dark: #f5f2eb;
-        --ink: #121212;
-        --ink-light: #4b5563;
-        --line: #e5ded2;
-        --gold: #d4af37;
+        --cream: 253 251 247;
+        --cream-dark: 245 242 235;
+        --ink: 18 18 18;
+        --ink-light: 42 42 42;
+        --stone: 230 228 223;
+        --gold: 212 175 55;
+        --emerald: 16 185 129;
       }
-      * { box-sizing: border-box; }
+
       html { scroll-behavior: smooth; }
       body {
-        margin: 0;
-        color: var(--ink);
-        font-family: "Inter", "Avenir Next", "Segoe UI", sans-serif;
-        background:
-          radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95) 0%, transparent 42%),
-          radial-gradient(circle at 100% 12%, rgba(212, 175, 55, 0.12) 0%, transparent 42%),
-          var(--cream);
+        font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: rgb(var(--cream));
+        color: rgb(var(--ink));
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        line-height: 1.6;
       }
-      h1, h2, h3 {
-        margin: 0;
-        font-family: "Space Grotesk", "Inter", sans-serif;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-      }
-      .shell {
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 1rem 1rem 4rem;
-      }
-      .topbar {
-        position: sticky;
-        top: 0;
-        z-index: 25;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        min-height: 4.2rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        background: rgba(255, 255, 255, 0.82);
-        backdrop-filter: blur(12px);
-      }
-      .logo {
-        font-size: 1.28rem;
-        font-weight: 700;
-      }
-      .logo span { color: var(--ink-light); font-size: 0.75em; letter-spacing: 0.06em; }
-      .top-actions {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-      }
-      .top-actions a {
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 0.45rem 0.78rem;
-        text-decoration: none;
-        color: var(--ink-light);
-        font-size: 0.82rem;
+      h1, h2, h3, h4, h5, h6 {
+        font-family: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
         font-weight: 600;
-        background: rgba(255, 255, 255, 0.7);
+        letter-spacing: -0.02em;
+        line-height: 1.15;
       }
-      .hero {
-        margin-top: 0.85rem;
-        border: 1px solid var(--line);
-        border-radius: 34px;
-        padding: 1.4rem;
-        background: linear-gradient(135deg, #f8f5ef 0%, #ffffff 50%, #f3ede3 100%);
-        box-shadow: 0 22px 52px rgba(16, 16, 16, 0.1);
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-12px); }
       }
-      .hero-grid {
-        display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 1.2rem;
-        align-items: center;
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
       }
-      .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.42rem;
-        border-radius: 999px;
-        border: 1px solid rgba(16, 185, 129, 0.36);
-        background: rgba(236, 253, 245, 0.9);
-        color: #047857;
-        font-size: 0.74rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 0.38rem 0.7rem;
+      @keyframes pulse-soft {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
       }
-      .hero-badge::before {
-        content: "";
-        width: 0.45rem;
-        height: 0.45rem;
-        border-radius: 999px;
-        background: #10b981;
-      }
-      .hero h1 {
-        margin-top: 0.8rem;
-        font-size: clamp(2rem, 4.3vw, 3.85rem);
-      }
-      .hero p {
-        margin: 0.85rem 0 0;
-        color: var(--ink-light);
-        line-height: 1.7;
-        max-width: 60ch;
-      }
-      .hero-actions {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.55rem;
-        flex-wrap: wrap;
-      }
-      .hero-actions a {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 0.84rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        padding: 0.75rem 1rem;
-      }
-      .hero-actions .primary {
-        border: 1px solid #111;
-        background: #111;
-        color: #fff;
-      }
-      .hero-actions .secondary {
-        border: 1px solid #d1d5db;
-        background: rgba(255, 255, 255, 0.85);
-        color: var(--ink);
-      }
-      .hero-trust {
-        margin-top: 0.95rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.48rem;
-      }
-      .hero-trust span {
-        border-radius: 999px;
-        border: 1px solid var(--line);
+
+      .animate-float { animation: float 6s ease-in-out infinite; }
+      .animate-reveal { animation: fadeInUp 0.6s ease-out forwards; }
+      .animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+      .glass-panel {
         background: rgba(255, 255, 255, 0.8);
-        color: var(--ink-light);
-        font-size: 0.74rem;
-        padding: 0.33rem 0.62rem;
-      }
-      .hero-visual {
-        position: relative;
-        aspect-ratio: 1;
-        border-radius: 28px;
-        overflow: hidden;
-        background: #ddd;
-      }
-      .hero-visual img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: scale(1.01);
-      }
-      .visual-card {
-        position: absolute;
-        left: 1rem;
-        right: 1rem;
-        bottom: 1rem;
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.48);
-        background: rgba(255, 255, 255, 0.72);
-        backdrop-filter: blur(10px);
-        padding: 0.8rem;
-        box-shadow: 0 12px 32px rgba(12, 12, 12, 0.14);
-      }
-      .visual-card p {
-        margin: 0;
-      }
-      .visual-card .muted {
-        font-size: 0.7rem;
-        color: var(--ink-light);
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
-        font-weight: 700;
-      }
-      .visual-card .strong {
-        margin-top: 0.2rem;
-        font-size: 0.95rem;
-        font-weight: 700;
-      }
-      .kpis {
-        margin-top: 0.95rem;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.5rem;
-      }
-      .kpi-card {
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.74);
-        padding: 0.65rem 0.72rem;
-      }
-      .kpi-card span {
-        display: block;
-        color: var(--ink-light);
-        font-size: 0.74rem;
-      }
-      .kpi-card strong {
-        margin-top: 0.12rem;
-        display: block;
-        font-size: 1rem;
-      }
-      .section-head {
-        margin: 1.45rem 0 0.75rem;
-      }
-      .section-head .eyebrow {
-        margin: 0;
-        color: var(--ink-light);
-        font-size: 0.74rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        font-weight: 700;
-      }
-      .section-head h2 {
-        margin-top: 0.35rem;
-        font-size: clamp(1.7rem, 3.2vw, 2.55rem);
-      }
-      .section-head p {
-        margin: 0.45rem 0 0;
-        color: var(--ink-light);
-      }
-      .product-grid {
-        display: grid;
-        gap: 0.9rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .product-card {
-        border: 1px solid var(--line);
-        border-radius: 24px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.92);
-        box-shadow: 0 12px 28px rgba(18, 18, 18, 0.08);
-      }
-      .product-image-wrap {
-        position: relative;
-        aspect-ratio: 1;
-        background: var(--cream-dark);
-        overflow: hidden;
-      }
-      .product-image-wrap img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.6s ease;
-      }
-      .product-card:hover .product-image-wrap img {
-        transform: scale(1.06);
-      }
-      .product-badge {
-        position: absolute;
-        left: 0.7rem;
-        top: 0.7rem;
-        border-radius: 999px;
-        background: #111;
-        color: #fff;
-        font-size: 0.72rem;
-        font-weight: 700;
-        padding: 0.3rem 0.6rem;
-      }
-      .product-body {
-        padding: 0.9rem;
-      }
-      .product-category {
-        margin: 0;
-        color: var(--ink-light);
-        text-transform: uppercase;
-        letter-spacing: 0.09em;
-        font-size: 0.7rem;
-        font-weight: 700;
-      }
-      .product-card h3 {
-        margin-top: 0.25rem;
-        font-size: 1.23rem;
-      }
-      .product-desc {
-        margin: 0.42rem 0 0;
-        min-height: 2.45rem;
-        color: var(--ink-light);
-        font-size: 0.92rem;
-        line-height: 1.5;
-      }
-      .product-rating {
-        margin-top: 0.55rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        color: var(--ink-light);
-        font-size: 0.8rem;
-      }
-      .stars {
-        display: inline-flex;
-        gap: 0.05rem;
-      }
-      .star {
-        color: #d1d5db;
-        font-size: 0.78rem;
-      }
-      .star-filled {
-        color: var(--gold);
-      }
-      .product-chips {
-        margin-top: 0.58rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.3rem;
-      }
-      .product-chips span {
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        background: #fff;
-        color: var(--ink-light);
-        font-size: 0.72rem;
-        padding: 0.24rem 0.52rem;
-      }
-      .product-foot {
-        margin-top: 0.72rem;
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 0.5rem;
-      }
-      .product-foot .old-price {
-        display: block;
-        font-size: 0.77rem;
-        text-decoration: line-through;
-        color: #9ca3af;
-      }
-      .product-foot strong {
-        display: block;
-        font-size: 1.28rem;
-      }
-      .add-btn {
-        border: 1px solid #111;
-        border-radius: 999px;
-        background: #111;
-        color: #fff;
-        font-weight: 700;
-        font-size: 0.78rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        padding: 0.6rem 0.86rem;
-        cursor: pointer;
-      }
-      .add-btn:hover { background: #2a2a2a; }
-      .cart {
-        position: fixed;
-        right: 1rem;
-        bottom: 1rem;
-        width: min(340px, calc(100vw - 2rem));
-        border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: rgba(18, 18, 18, 0.92);
-        color: #fff;
         backdrop-filter: blur(12px);
-        box-shadow: 0 20px 38px rgba(0, 0, 0, 0.3);
-        padding: 0.82rem;
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
       }
-      .cart-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      .glass-card {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
       }
-      .cart-head h3 {
-        margin: 0;
-        font-size: 0.98rem;
+      .text-balance { text-wrap: balance; }
+
+      .cart-drawer {
+        transition: transform 280ms ease;
+        transform: translateX(100%);
       }
-      .cart-count {
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.34);
-        padding: 0.2rem 0.52rem;
-        font-size: 0.78rem;
+      .cart-drawer.open {
+        transform: translateX(0);
       }
-      .cart-items {
-        margin-top: 0.52rem;
-        max-height: 168px;
-        overflow: auto;
-        display: grid;
-        gap: 0.34rem;
+      .overlay {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 220ms ease;
       }
-      .cart-item {
-        display: flex;
-        justify-content: space-between;
-        color: #e8e8e8;
-        font-size: 0.82rem;
+      .overlay.open {
+        opacity: 1;
+        pointer-events: auto;
       }
-      .cart-total {
-        margin-top: 0.62rem;
-        padding-top: 0.6rem;
-        border-top: 1px dashed rgba(255, 255, 255, 0.3);
-        display: flex;
-        justify-content: space-between;
-        font-weight: 700;
-      }
-      footer {
-        margin-top: 1.2rem;
-        color: var(--ink-light);
-        font-size: 0.85rem;
-      }
-      code {
-        border-radius: 5px;
-        background: rgba(0, 0, 0, 0.07);
-        padding: 0.1rem 0.34rem;
-      }
-      @media (max-width: 980px) {
-        .hero-grid { grid-template-columns: 1fr; }
-        .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      }
-      @media (max-width: 760px) {
-        .product-grid,
-        .kpis {
-          grid-template-columns: 1fr;
-        }
-        .cart {
-          position: static;
-          margin-top: 1rem;
-          width: 100%;
-        }
+      .thumb.active {
+        outline: 2px solid #000;
+        outline-offset: 2px;
       }
     </style>
   </head>
   <body>
-    <main class="shell">
-      <header class="topbar">
-        <div class="logo">SIMONE <span>WORLD SHOP</span></div>
-        <nav class="top-actions">
-          <a href="#products">Products</a>
-          <a href="/api/products">API</a>
-          <a href="/health">Health</a>
+    <header id="topHeader" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-5 bg-transparent">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <a href="#" class="text-xl sm:text-2xl font-bold tracking-tight">AURUM</a>
+
+        <nav class="hidden md:flex items-center gap-8">
+          <a href="#technology" class="text-sm font-medium text-gray-700 hover:text-black transition-colors">Technology</a>
+          <a href="#specs" class="text-sm font-medium text-gray-700 hover:text-black transition-colors">Specs</a>
+          <a href="#reviews" class="text-sm font-medium text-gray-700 hover:text-black transition-colors">Reviews</a>
+          <a href="#sustainability" class="text-sm font-medium text-gray-700 hover:text-black transition-colors">Sustainability</a>
         </nav>
-      </header>
 
-      <section class="hero">
-        <div class="hero-grid">
-          <div>
-            <span class="hero-badge">Production Build ${BUILD_DATE}</span>
-            <h1>Single-product inspired commerce look. Fast, clear, premium.</h1>
-            <p>
-              Product-first layout, premium cards with real imagery, and direct cart interactions
-              on a Cloudflare Worker runtime.
-            </p>
-            <div class="hero-actions">
-              <a class="primary" href="#products">Browse Catalog</a>
-              <a class="secondary" href="/api/products">View Product API</a>
+        <div class="flex items-center gap-3">
+          <button id="openCartBtn" class="relative p-2 hover:bg-black/5 rounded-full transition-colors" aria-label="Open cart">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 2.2c-.6.6-.2 1.8.7 1.8H17m0 0a2 2 0 110 4 2 2 0 010-4m-8 2a2 2 0 11-4 0 2 2 0 014 0"></path></svg>
+            <span id="cartCountBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs items-center justify-center rounded-full font-bold">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="min-h-screen pt-24 pb-16 flex items-center bg-gradient-to-br from-stone-50 via-white to-stone-100">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div class="order-2 lg:order-1 space-y-8 animate-reveal">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-soft"></span>
+              <span class="text-xs font-semibold text-emerald-700 uppercase tracking-wide">New Release 2026</span>
             </div>
-            <div class="hero-trust">
-              <span>Free Express Shipping</span>
-              <span>2-Year Warranty</span>
-              <span>30-Day Returns</span>
+
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] text-balance">The reference<br/>for pure sound.</h1>
+            <p class="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-lg">Designed for absolute accuracy, engineered with aerospace-grade materials, and tuned to deliver studio-level detail anywhere.</p>
+
+            <div class="flex items-center gap-4">
+              <span class="text-sm font-medium text-gray-500">Color:</span>
+              <div class="flex items-center gap-2" id="variantDots"></div>
+              <span class="text-sm font-medium text-gray-900 ml-2" id="variantName">Graphite</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+              <button id="heroAddToCart" class="inline-flex items-center justify-center gap-3 px-8 py-4 bg-black text-white rounded-full font-semibold text-sm uppercase tracking-wide hover:bg-gray-800 transition-all hover:scale-[1.02] shadow-lg hover:shadow-xl">Add to Cart - EUR 599</button>
+              <a href="#specs" class="inline-flex items-center justify-center gap-2 px-8 py-4 border border-gray-300 text-gray-700 rounded-full font-semibold text-sm uppercase tracking-wide hover:bg-gray-50 transition-colors">View Specs</a>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-6 pt-6 text-sm text-gray-500">
+              <div class="flex items-center gap-2"><span class="text-emerald-600">✓</span><span>Free Express Shipping</span></div>
+              <div class="flex items-center gap-2"><span class="text-emerald-600">✓</span><span>5-Year Warranty</span></div>
+              <div class="flex items-center gap-2"><span class="text-emerald-600">✓</span><span>45-Day Returns</span></div>
             </div>
           </div>
 
-          <div class="hero-visual">
-            <img src="${products[0].imageUrl}" alt="Featured product visual" />
-            <div class="visual-card">
-              <p class="muted">Sound Engineering</p>
-              <p class="strong">Studio-grade quality UI + cart flow</p>
+          <div class="order-1 lg:order-2 relative animate-float">
+            <div class="relative aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 shadow-2xl group">
+              <img id="heroImage" src="${products[0].imageUrl}" alt="AURUM X1" class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
+              <div class="absolute bottom-6 left-6 right-6 glass-card p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Sound Engineering</p>
+                  <p class="text-sm font-semibold text-gray-900">Studio-Grade Audio</p>
+                </div>
+                <button class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center">▶</button>
+              </div>
             </div>
           </div>
         </div>
-        <section class="kpis">${kpiRows}</section>
-      </section>
+      </div>
+    </section>
 
-      <section class="section-head" id="products">
-        <p class="eyebrow">Featured Products</p>
-        <h2>Product cards with images, pricing, ratings, and real add-to-cart.</h2>
-        <p>Design language aligned to your single-product-shop reference.</p>
-      </section>
-      <section class="product-grid">${productCards}</section>
-
-      <footer>
-        Endpoints: <code>/health</code> and <code>/api/products</code>
-      </footer>
-
-      <aside class="cart" aria-live="polite">
-        <div class="cart-head">
-          <h3>Cart</h3>
-          <span class="cart-count" id="cartCount">0 items</span>
+    <section class="py-24 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <span class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Gallery</span>
+          <h2 class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold">Every Angle, Perfected</h2>
         </div>
-        <div class="cart-items" id="cartItems">
-          <div class="cart-item"><span>No items yet</span><span>EUR 0.00</span></div>
+
+        <div class="relative aspect-[16/9] rounded-3xl overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200 mb-6 group">
+          <img id="galleryMainImage" src="${products[0].imageUrl}" alt="Gallery" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+          <div class="absolute top-6 left-6 px-5 py-2.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg"><span class="text-sm font-bold text-gray-900" id="galleryBadge">Award Winning Design</span></div>
+          <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+            <h3 class="text-3xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg" id="galleryHeadline">Precision Engineered</h3>
+            <p class="text-lg md:text-xl text-white/90 drop-shadow-md" id="gallerySubline">Every curve calculated for acoustic perfection</p>
+          </div>
         </div>
-        <div class="cart-total">
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="galleryThumbs"></div>
+      </div>
+    </section>
+
+    <section class="relative py-0">
+      <div class="relative h-[70vh] min-h-[500px] bg-gray-900 overflow-hidden">
+        <img src="${products[1].imageUrl}" alt="Lifestyle" class="absolute inset-0 w-full h-full object-cover opacity-60" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <div class="absolute inset-0 flex items-end">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+            <div class="max-w-2xl">
+              <span class="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-xs font-bold text-white uppercase tracking-widest mb-6">Lifestyle</span>
+              <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">Designed for Your World</h2>
+              <p class="text-xl text-white/80 leading-relaxed mb-8">From morning commutes to late-night sessions. Built to perform wherever life takes you.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="technology" class="py-24 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <span class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Technology</span>
+          <h2 class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold text-balance">Engineered to reference standards</h2>
+          <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Every component is tuned for accuracy, durability, and long-term reliability.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-8 rounded-2xl bg-gray-50 border border-gray-100"><div class="w-12 h-12 rounded-xl bg-black text-white flex items-center justify-center font-bold text-lg mb-6">01</div><h3 class="text-xl font-bold mb-3">Beryllium-coated drivers</h3><p class="text-gray-600 leading-relaxed">Ultra-light 40mm diaphragms deliver tighter transients and wider dynamic range.</p></div>
+          <div class="p-8 rounded-2xl bg-gray-50 border border-gray-100"><div class="w-12 h-12 rounded-xl bg-black text-white flex items-center justify-center font-bold text-lg mb-6">02</div><h3 class="text-xl font-bold mb-3">Adaptive noise control</h3><p class="text-gray-600 leading-relaxed">Hybrid ANC with 8 microphones and real-time DSP for clean silence.</p></div>
+          <div class="p-8 rounded-2xl bg-gray-50 border border-gray-100"><div class="w-12 h-12 rounded-xl bg-black text-white flex items-center justify-center font-bold text-lg mb-6">03</div><h3 class="text-xl font-bold mb-3">Aerospace aluminum frame</h3><p class="text-gray-600 leading-relaxed">CNC-milled for structural integrity and perfect balance.</p></div>
+          <div class="p-8 rounded-2xl bg-gray-50 border border-gray-100"><div class="w-12 h-12 rounded-xl bg-black text-white flex items-center justify-center font-bold text-lg mb-6">04</div><h3 class="text-xl font-bold mb-3">48h battery life</h3><p class="text-gray-600 leading-relaxed">With fast-charge: 10 min = 5 hours of playback.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="specs" class="py-24 bg-gray-900 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div class="lg:col-span-1 space-y-6">
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Specifications</span>
+            <h2 class="text-3xl sm:text-4xl font-bold">Technical Details</h2>
+            <p class="text-gray-400 leading-relaxed">Every component is precision-engineered for professional-grade performance.</p>
+          </div>
+          <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10"><p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Driver</p><p class="text-lg font-bold text-white">40mm beryllium-coated</p></div>
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10"><p class="text-xs text-gray-400 uppercase tracking-wide mb-2">ANC</p><p class="text-lg font-bold text-white">Hybrid, 8-mic array</p></div>
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10"><p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Battery</p><p class="text-lg font-bold text-white">48h playback</p></div>
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10"><p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Charging</p><p class="text-lg font-bold text-white">USB-C, fast charge</p></div>
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10"><p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Weight</p><p class="text-lg font-bold text-white">295g</p></div>
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10"><p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Bluetooth</p><p class="text-lg font-bold text-white">5.4 + multipoint</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="reviews" class="py-24 bg-stone-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <span class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Reviews</span>
+          <h2 class="mt-4 text-3xl sm:text-4xl font-bold">Loved by 812+ Customers</h2>
+          <p class="mt-2 text-gray-600">4.9 out of 5 average rating</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="p-8 rounded-2xl bg-white border border-gray-100 shadow-sm"><h3 class="text-lg font-bold mb-2">Studio accuracy</h3><p class="text-gray-600 mb-6 leading-relaxed">Neutral, detailed tuning. Best noise control I have used.</p><p class="font-semibold">David K. - Berlin</p></div>
+          <div class="p-8 rounded-2xl bg-white border border-gray-100 shadow-sm"><h3 class="text-lg font-bold mb-2">Built like an instrument</h3><p class="text-gray-600 mb-6 leading-relaxed">Materials and fit feel truly premium. Everything is engineered.</p><p class="font-semibold">Mila S. - Vienna</p></div>
+          <div class="p-8 rounded-2xl bg-white border border-gray-100 shadow-sm"><h3 class="text-lg font-bold mb-2">Only pair I travel with</h3><p class="text-gray-600 mb-6 leading-relaxed">Battery lasts forever, comfort is excellent for long flights.</p><p class="font-semibold">Oliver R. - Zurich</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sustainability" class="py-24 bg-emerald-950 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Sustainability</span>
+          <h2 class="mt-4 text-3xl sm:text-4xl font-bold text-white">Designed for Longevity. Built Responsibly.</h2>
+          <p class="mt-4 text-lg text-emerald-200/80 max-w-2xl mx-auto">We use recycled materials and plastic-free packaging.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bg-black text-white py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div class="md:col-span-2">
+            <h3 class="text-2xl font-bold mb-4">AURUM</h3>
+            <p class="text-gray-400 max-w-md">Precision audio engineered for reference standards.</p>
+          </div>
+          <div><h4 class="font-semibold mb-4">Company</h4><ul class="space-y-2 text-sm text-gray-400"><li>About</li><li>Careers</li><li>Press</li></ul></div>
+          <div><h4 class="font-semibold mb-4">Support</h4><ul class="space-y-2 text-sm text-gray-400"><li>FAQ</li><li>Shipping</li><li>Returns</li></ul></div>
+        </div>
+        <p class="text-gray-500 text-sm mt-12">© 2026 AURUM Labs GmbH. Build ${BUILD_DATE}</p>
+      </div>
+    </footer>
+
+    <div id="cartOverlay" class="overlay fixed inset-0 z-50 bg-black/50"></div>
+    <aside id="cartDrawer" class="cart-drawer fixed top-0 right-0 z-[60] h-full w-full max-w-md bg-white shadow-2xl p-6 overflow-y-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold">Cart</h3>
+        <button id="closeCartBtn" class="w-10 h-10 rounded-full border">✕</button>
+      </div>
+      <div id="cartItems" class="space-y-3"></div>
+      <div class="mt-6 border-t pt-4">
+        <div class="flex items-center justify-between text-lg font-semibold">
           <span>Total</span>
-          <span id="cartTotal">EUR 0.00</span>
+          <span id="cartTotal">EUR 0</span>
         </div>
-      </aside>
-    </main>
+        <button class="mt-4 w-full rounded-full bg-black text-white py-3 font-semibold">Checkout</button>
+      </div>
+    </aside>
 
     <script>
-      const CART_KEY = "simone_cart_v1";
-      const cartItemsEl = document.getElementById("cartItems");
-      const cartCountEl = document.getElementById("cartCount");
-      const cartTotalEl = document.getElementById("cartTotal");
-      const addButtons = Array.from(document.querySelectorAll(".add-btn"));
+      const PRODUCTS = ${productsJson};
+      const CART_KEY = 'aurum_worker_cart_v1';
+      let currentVariantIndex = 0;
+
+      const topHeader = document.getElementById('topHeader');
+      const heroImage = document.getElementById('heroImage');
+      const variantName = document.getElementById('variantName');
+      const variantDots = document.getElementById('variantDots');
+      const heroAddToCart = document.getElementById('heroAddToCart');
+      const cartCountBadge = document.getElementById('cartCountBadge');
+      const openCartBtn = document.getElementById('openCartBtn');
+      const closeCartBtn = document.getElementById('closeCartBtn');
+      const cartDrawer = document.getElementById('cartDrawer');
+      const cartOverlay = document.getElementById('cartOverlay');
+      const cartItems = document.getElementById('cartItems');
+      const cartTotal = document.getElementById('cartTotal');
+      const galleryMainImage = document.getElementById('galleryMainImage');
+      const galleryThumbs = document.getElementById('galleryThumbs');
+
+      const galleryData = [
+        { image: PRODUCTS[0].imageUrl, headline: 'Precision Engineered', subline: 'Every curve calculated for acoustic perfection', badge: 'Award Winning Design' },
+        { image: PRODUCTS[1].imageUrl, headline: 'Ergonomic Mastery', subline: 'Designed to feel like an extension of you', badge: 'Ultra Lightweight 295g' },
+        { image: PRODUCTS[2].imageUrl, headline: 'Premium Materials', subline: 'Aerospace aluminum meets leather comfort', badge: 'Handcrafted Finish' },
+        { image: PRODUCTS[0].imageUrl, headline: 'Designed for Life', subline: 'From studio sessions to city streets', badge: '48h Battery Life' },
+      ];
 
       function readCart() {
         try {
           const raw = localStorage.getItem(CART_KEY);
           return raw ? JSON.parse(raw) : [];
-        } catch (_) {
+        } catch {
           return [];
         }
       }
@@ -670,54 +376,113 @@ function renderHomeHtml() {
         localStorage.setItem(CART_KEY, JSON.stringify(items));
       }
 
-      function formatEur(value) {
-        return "EUR " + value.toFixed(2);
+      function formatPrice(value) {
+        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
+      }
+
+      function renderVariantDots() {
+        variantDots.innerHTML = '';
+        PRODUCTS.forEach((product, index) => {
+          const btn = document.createElement('button');
+          btn.className = 'w-8 h-8 rounded-full transition-all border';
+          btn.style.background = index === 0 ? '#2C2F36' : index === 1 ? '#C4C8CF' : '#0B0F14';
+          if (index === currentVariantIndex) btn.style.transform = 'scale(1.1)';
+          btn.addEventListener('click', () => {
+            currentVariantIndex = index;
+            heroImage.src = product.imageUrl;
+            variantName.textContent = product.name.split(' - ')[1] || product.name;
+            renderVariantDots();
+          });
+          variantDots.appendChild(btn);
+        });
+      }
+
+      function renderGallery() {
+        galleryThumbs.innerHTML = '';
+        galleryData.forEach((item, index) => {
+          const btn = document.createElement('button');
+          btn.className = 'thumb relative aspect-square rounded-2xl overflow-hidden border border-gray-200';
+          btn.innerHTML = '<img src="' + item.image + '" alt="Gallery" class="w-full h-full object-cover" />';
+          btn.addEventListener('click', () => {
+            galleryMainImage.src = item.image;
+            document.getElementById('galleryHeadline').textContent = item.headline;
+            document.getElementById('gallerySubline').textContent = item.subline;
+            document.getElementById('galleryBadge').textContent = item.badge;
+            document.querySelectorAll('.thumb').forEach((n) => n.classList.remove('active'));
+            btn.classList.add('active');
+          });
+          if (index === 0) btn.classList.add('active');
+          galleryThumbs.appendChild(btn);
+        });
+      }
+
+      function addCurrentVariantToCart() {
+        const product = PRODUCTS[currentVariantIndex];
+        const cart = readCart();
+        cart.push({ id: product.id, name: product.name, price: product.priceEur });
+        writeCart(cart);
+        renderCart();
+        openCart();
       }
 
       function renderCart() {
-        const items = readCart();
-        if (!items.length) {
-          cartItemsEl.innerHTML = '<div class="cart-item"><span>No items yet</span><span>EUR 0.00</span></div>';
-          cartCountEl.textContent = "0 items";
-          cartTotalEl.textContent = "EUR 0.00";
+        const cart = readCart();
+        cartCountBadge.textContent = String(cart.length);
+        if (cart.length > 0) cartCountBadge.classList.remove('hidden');
+        if (cart.length === 0) cartCountBadge.classList.add('hidden');
+
+        if (!cart.length) {
+          cartItems.innerHTML = '<p class="text-sm text-gray-500">Your cart is empty.</p>';
+          cartTotal.textContent = 'EUR 0';
           return;
         }
 
-        const byName = new Map();
-        for (const item of items) {
-          if (!byName.has(item.name)) {
-            byName.set(item.name, { qty: 0, price: item.price });
+        const grouped = new Map();
+        cart.forEach((item) => {
+          const found = grouped.get(item.id);
+          if (found) {
+            found.qty += 1;
+          } else {
+            grouped.set(item.id, { ...item, qty: 1 });
           }
-          byName.get(item.name).qty += 1;
-        }
+        });
 
-        const lines = [];
         let total = 0;
-        for (const [name, info] of byName.entries()) {
-          const lineTotal = info.qty * info.price;
-          total += lineTotal;
-          lines.push('<div class="cart-item"><span>' + name + " x" + info.qty + '</span><span>' + formatEur(lineTotal) + "</span></div>");
-        }
+        cartItems.innerHTML = '';
+        grouped.forEach((item) => {
+          total += item.price * item.qty;
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between border rounded-xl px-3 py-2';
+          row.innerHTML = '<div><p class="font-medium text-sm">' + item.name + '</p><p class="text-xs text-gray-500">x' + item.qty + '</p></div><p class="font-semibold">' + formatPrice(item.price * item.qty) + '</p>';
+          cartItems.appendChild(row);
+        });
 
-        cartItemsEl.innerHTML = lines.join("");
-        cartCountEl.textContent = items.length + (items.length === 1 ? " item" : " items");
-        cartTotalEl.textContent = formatEur(total);
+        cartTotal.textContent = formatPrice(total);
       }
 
-      function addItem(button) {
-        const name = button.dataset.name;
-        const price = Number(button.dataset.price || 0);
-        const id = button.dataset.id;
-        const items = readCart();
-        items.push({ id, name, price });
-        writeCart(items);
-        renderCart();
+      function openCart() {
+        cartDrawer.classList.add('open');
+        cartOverlay.classList.add('open');
+      }
+      function closeCart() {
+        cartDrawer.classList.remove('open');
+        cartOverlay.classList.remove('open');
       }
 
-      addButtons.forEach((button) => {
-        button.addEventListener("click", () => addItem(button));
+      window.addEventListener('scroll', () => {
+        const scrolled = window.scrollY > 50;
+        topHeader.className = scrolled
+          ? 'fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-3 glass-panel shadow-sm'
+          : 'fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-5 bg-transparent';
       });
 
+      heroAddToCart.addEventListener('click', addCurrentVariantToCart);
+      openCartBtn.addEventListener('click', openCart);
+      closeCartBtn.addEventListener('click', closeCart);
+      cartOverlay.addEventListener('click', closeCart);
+
+      renderVariantDots();
+      renderGallery();
       renderCart();
     </script>
   </body>
@@ -738,17 +503,14 @@ export default {
     }
 
     if (pathname === "/api/products") {
-      return jsonResponse({
-        count: products.length,
-        products,
-      });
+      return jsonResponse({ count: products.length, products });
     }
 
     if (pathname.startsWith("/api/")) {
       return jsonResponse({ error: "not_found" }, 404);
     }
 
-    return new Response(renderHomeHtml(), {
+    return new Response(renderShopHtml(), {
       headers: {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "public, max-age=120",
