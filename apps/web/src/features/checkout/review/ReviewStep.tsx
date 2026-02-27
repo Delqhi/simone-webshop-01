@@ -14,10 +14,10 @@ type ReviewStepProps = {
 
 export function ReviewStep({ shippingData, items, isSubmitting, onBack, onSubmit }: ReviewStepProps) {
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl">Bestellung prüfen</h2>
+    <div className="space-y-5">
+      <h2 className="text-2xl">Bestellung pruefen</h2>
 
-      <div className="panel-soft p-4 text-sm text-brand-text-muted">
+      <div className="rounded-2xl border border-brand-border bg-brand-bg-muted/70 p-4 text-sm text-brand-text-muted">
         <p className="font-semibold text-brand-text">Lieferung an</p>
         <p>
           {shippingData.firstName} {shippingData.lastName}
@@ -30,7 +30,7 @@ export function ReviewStep({ shippingData, items, isSubmitting, onBack, onSubmit
 
       <div className="space-y-3">
         {items.map((item) => (
-          <article key={item.id} className="flex items-center gap-3">
+          <article key={item.id} className="flex items-center gap-3 rounded-2xl border border-brand-border bg-white/80 px-3 py-2">
             <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-brand-bg-muted">
               <Image src={item.image} alt={item.name} fill className="object-cover" />
             </div>
@@ -45,7 +45,7 @@ export function ReviewStep({ shippingData, items, isSubmitting, onBack, onSubmit
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onBack} fullWidth>
-          Zurück
+          Zurueck
         </Button>
         <Button onClick={onSubmit} isLoading={isSubmitting} fullWidth>
           Zahlungspflichtig bestellen

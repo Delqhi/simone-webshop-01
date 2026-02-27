@@ -60,7 +60,7 @@ export default function CheckoutPage() {
     return (
       <main className="shell-container py-14 text-center">
         <h1 className="text-3xl">Dein Warenkorb ist leer</h1>
-        <p className="mt-3 text-brand-text-muted">Füge zuerst Produkte hinzu und starte danach den Checkout.</p>
+        <p className="mt-3 text-brand-text-muted">Fuge zuerst Produkte hinzu und starte danach den Checkout.</p>
         <Link href="/products" className="mt-5 inline-flex">
           <Button>Produkte ansehen</Button>
         </Link>
@@ -76,7 +76,7 @@ export default function CheckoutPage() {
   const goNext = async () => {
     if (step === 'shipping') {
       if (hasMissingShippingFields(shippingData)) {
-        setError('Bitte fülle alle Pflichtfelder für die Lieferung aus.')
+        setError('Bitte fulle alle Pflichtfelder fuer die Lieferung aus.')
         return
       }
       setError(null)
@@ -142,14 +142,17 @@ export default function CheckoutPage() {
 
   return (
     <main className="shell-container py-10">
-      <header className="mb-6">
+      <header className="mb-6 rounded-[1.8rem] border border-brand-border bg-gradient-to-br from-stone-50 via-white to-stone-100 p-6">
         <Link href="/cart" className="inline-flex items-center gap-1 text-sm text-brand-text-muted hover:text-brand-text">
           <ArrowLeft className="h-4 w-4" />
-          Zurück zum Warenkorb
+          Zurueck zum Warenkorb
         </Link>
-        <h1 className="mt-2 text-4xl">Checkout</h1>
-        <p className="mt-2 text-brand-text-muted">{SEGMENT_LABELS[segment]} mit transparenten Kosten und klaren Pflichtfeldern.</p>
+        <h1 className="mt-2 text-4xl md:text-5xl">Checkout</h1>
+        <p className="mt-2 text-brand-text-muted">
+          {SEGMENT_LABELS[segment]} mit transparenten Kosten und klaren Pflichtfeldern.
+        </p>
       </header>
+
       {checkoutCancelled ? (
         <CheckoutCancelledNotice
           retryCheckoutURL={retryCheckoutURL}
@@ -165,11 +168,11 @@ export default function CheckoutPage() {
       <CheckoutStepper currentStep={step} />
 
       <div className="grid gap-6 lg:grid-cols-[1.45fr_0.9fr]">
-        <section className="panel p-6">
+        <section className="rounded-[1.7rem] border border-brand-border bg-white/90 p-6 shadow-[0_12px_30px_rgba(10,10,10,0.08)]">
           {step === 'shipping' ? <ShippingStep shippingData={shippingData} segment={segment} onChange={setShippingData} onContinue={goNext} /> : null}
           {step === 'payment' ? <PaymentStep method={paymentMethod} onMethodChange={setPaymentMethod} onBack={goBack} onContinue={goNext} /> : null}
           {step === 'review' ? <ReviewStep shippingData={shippingData} items={items} isSubmitting={loading} onBack={goBack} onSubmit={submitCheckout} /> : null}
-          {error ? <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+          {error ? <p className="mt-4 rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
         </section>
 
         <OrderSummary subtotal={total} shipping={shippingCost} total={grandTotal} />

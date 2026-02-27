@@ -2,15 +2,16 @@
 
 export function ProductSkeleton() {
   return (
-    <div className="panel-soft animate-pulse overflow-hidden">
+    <div className="overflow-hidden rounded-3xl border border-brand-border bg-white/85 shadow-[0_10px_28px_rgba(10,10,10,0.07)] animate-pulse">
       <div className="aspect-square bg-brand-bg-muted" />
-      <div className="space-y-3 p-4">
-        <div className="h-3 w-16 rounded bg-brand-bg-muted" />
+      <div className="space-y-3 p-5">
+        <div className="h-3 w-20 rounded bg-brand-bg-muted" />
         <div className="space-y-2">
           <div className="h-4 w-full rounded bg-brand-bg-muted" />
           <div className="h-4 w-3/4 rounded bg-brand-bg-muted" />
         </div>
-        <div className="h-5 w-24 rounded bg-brand-bg-muted" />
+        <div className="h-7 w-28 rounded bg-brand-bg-muted" />
+        <div className="h-10 w-full rounded-full bg-brand-bg-muted" />
       </div>
     </div>
   )
@@ -20,10 +21,10 @@ export function ProductDetailSkeleton() {
   return (
     <div className="grid animate-pulse gap-8 md:grid-cols-2 lg:gap-12">
       <div className="space-y-4">
-        <div className="aspect-square rounded-2xl bg-brand-bg-muted" />
-        <div className="flex gap-2">
+        <div className="aspect-square rounded-3xl bg-brand-bg-muted" />
+        <div className="grid grid-cols-4 gap-2">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 w-20 rounded-xl bg-brand-bg-muted" />
+            <div key={i} className="aspect-square rounded-2xl bg-brand-bg-muted" />
           ))}
         </div>
       </div>
@@ -41,8 +42,8 @@ export function ProductDetailSkeleton() {
           <div className="h-4 w-2/3 rounded bg-brand-bg-muted" />
         </div>
         <div className="flex gap-4">
-          <div className="h-12 w-32 rounded-xl bg-brand-bg-muted" />
-          <div className="h-12 flex-1 rounded-xl bg-brand-bg-muted" />
+          <div className="h-12 w-32 rounded-full bg-brand-bg-muted" />
+          <div className="h-12 flex-1 rounded-full bg-brand-bg-muted" />
         </div>
       </div>
     </div>

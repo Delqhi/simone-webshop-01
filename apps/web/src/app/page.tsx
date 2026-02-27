@@ -65,7 +65,7 @@ export default function HomePage() {
       <HeroSection segment={segment} variant={heroVariant} />
 
       <section className="shell-container mt-7">
-        <div className="panel px-4 py-4">
+        <div className="rounded-[1.7rem] border border-brand-border bg-white/85 px-5 py-5 shadow-[0_10px_30px_rgba(10,10,10,0.06)]">
           <p className="section-eyebrow mb-3">Vertrauen im Checkout</p>
           <TrustInlineBar signals={PRIMARY_TRUST_SIGNALS} />
         </div>
@@ -74,14 +74,14 @@ export default function HomePage() {
       <SegmentEntryCards />
       <ValuePropsGrid />
 
-      <section className="shell-container mt-11">
+      <section className="shell-container mt-12">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="section-eyebrow">
-              {segment === 'b2b' ? 'Verfügbare Kernartikel' : 'Beliebte Produkte'}
+              {segment === 'b2b' ? 'Verfuegbare Kernartikel' : 'Beliebte Produkte'}
             </p>
-            <h2 className="mt-2 text-3xl">
-              {segment === 'b2b' ? 'Für Teams schnell wiederbestellbar' : 'Für den Alltag schnell entscheidbar'}
+            <h2 className="mt-2 text-3xl md:text-4xl">
+              {segment === 'b2b' ? 'Fuer Teams schnell wiederbestellbar' : 'Fuer den Alltag schnell entscheidbar'}
             </h2>
           </div>
           <Link href="/products">
@@ -95,31 +95,31 @@ export default function HomePage() {
           products={featuredProducts}
           loading={loading}
           columns={4}
-          emptyMessage="Noch keine Produkte verfügbar"
+          emptyMessage="Noch keine Produkte verfugbar"
         />
       </section>
 
       <section className="shell-container mt-14">
         <div className="grid gap-4 md:grid-cols-3">
-          <article className="panel-soft p-5">
-            <LineChart className="h-5 w-5 text-brand-accent" />
-            <h3 className="mt-3 text-lg">Transparente Preislogik</h3>
-            <p className="mt-2 text-sm leading-6 text-brand-text-muted">
+          <article className="rounded-[1.5rem] border border-brand-border bg-white/85 p-5 shadow-[0_8px_24px_rgba(10,10,10,0.05)]">
+            <LineChart className="h-5 w-5 text-brand-text" />
+            <h3 className="mt-3 text-xl">Transparente Preislogik</h3>
+            <p className="mt-2 text-sm leading-7 text-brand-text-muted">
               Preise, Versand und steuerliche Hinweise bleiben von Produktseite bis Checkout konsistent sichtbar.
             </p>
           </article>
-          <article className="panel-soft p-5">
-            <MessagesSquare className="h-5 w-5 text-brand-accent" />
-            <h3 className="mt-3 text-lg">Support im richtigen Moment</h3>
-            <p className="mt-2 text-sm leading-6 text-brand-text-muted">
-              Kritische Fragen zu Lieferung oder Rückgabe sind direkt aus dem Funnel erreichbar.
+          <article className="rounded-[1.5rem] border border-brand-border bg-white/85 p-5 shadow-[0_8px_24px_rgba(10,10,10,0.05)]">
+            <MessagesSquare className="h-5 w-5 text-brand-text" />
+            <h3 className="mt-3 text-xl">Support im richtigen Moment</h3>
+            <p className="mt-2 text-sm leading-7 text-brand-text-muted">
+              Kritische Fragen zu Lieferung oder Rueckgabe sind direkt aus dem Funnel erreichbar.
             </p>
           </article>
-          <article className="panel-soft p-5">
-            <ArrowRight className="h-5 w-5 text-brand-accent" />
-            <h3 className="mt-3 text-lg">Klarer nächster Schritt</h3>
-            <p className="mt-2 text-sm leading-6 text-brand-text-muted">
-              Jede Seite führt mit einem eindeutigen CTA weiter, ohne versteckte Hürden oder Dark Patterns.
+          <article className="rounded-[1.5rem] border border-brand-border bg-white/85 p-5 shadow-[0_8px_24px_rgba(10,10,10,0.05)]">
+            <ArrowRight className="h-5 w-5 text-brand-text" />
+            <h3 className="mt-3 text-xl">Klarer naechster Schritt</h3>
+            <p className="mt-2 text-sm leading-7 text-brand-text-muted">
+              Jede Seite fuhrt mit einem eindeutigen CTA weiter, ohne versteckte Huerden oder Dark Patterns.
             </p>
           </article>
         </div>

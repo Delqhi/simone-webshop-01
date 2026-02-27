@@ -13,10 +13,10 @@ export function CheckoutStepper({ currentStep }: CheckoutStepperProps) {
         <div key={entry.id} className="flex items-center gap-2">
           <span
             className={[
-              'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm',
+              'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold',
               currentStep === entry.id
-                ? 'border-brand-accent bg-brand-surface text-brand-text'
-                : 'border-brand-border text-brand-text-muted',
+                ? 'border-black bg-black text-white'
+                : 'border-brand-border bg-white text-brand-text-muted',
             ].join(' ')}
           >
             <entry.icon className="h-4 w-4" />

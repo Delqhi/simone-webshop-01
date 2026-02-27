@@ -11,7 +11,7 @@ type ShippingStepProps = {
 
 export function ShippingStep({ shippingData, segment, onChange, onContinue }: ShippingStepProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <h2 className="text-2xl">Lieferadresse</h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -25,7 +25,7 @@ export function ShippingStep({ shippingData, segment, onChange, onContinue }: Sh
       </div>
 
       <Input
-        label="Straße und Hausnummer"
+        label="StraÃe und Hausnummer"
         value={shippingData.street}
         onChange={(event) => onChange({ ...shippingData, street: event.target.value })}
         required
@@ -39,18 +39,20 @@ export function ShippingStep({ shippingData, segment, onChange, onContinue }: Sh
       </div>
 
       {segment === 'b2b' ? (
-        <div className="panel-soft space-y-3 p-4">
+        <div className="rounded-[1.3rem] border border-brand-border bg-brand-bg-muted/70 p-4">
           <h3 className="text-lg">B2B-Felder (optional)</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <Input label="Firma" value={shippingData.companyName} onChange={(event) => onChange({ ...shippingData, companyName: event.target.value })} />
             <Input label="VAT-ID" value={shippingData.vatId} onChange={(event) => onChange({ ...shippingData, vatId: event.target.value })} />
           </div>
-          <Input
-            label="Bestellreferenz"
-            hint="z. B. interne PO-Nummer"
-            value={shippingData.purchaseOrderRef}
-            onChange={(event) => onChange({ ...shippingData, purchaseOrderRef: event.target.value })}
-          />
+          <div className="mt-3">
+            <Input
+              label="Bestellreferenz"
+              hint="z. B. interne PO-Nummer"
+              value={shippingData.purchaseOrderRef}
+              onChange={(event) => onChange({ ...shippingData, purchaseOrderRef: event.target.value })}
+            />
+          </div>
         </div>
       ) : null}
 

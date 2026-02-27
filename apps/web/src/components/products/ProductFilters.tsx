@@ -1,6 +1,6 @@
 'use client'
 
-import { SlidersHorizontal } from 'lucide-react'
+import { Check, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import type { Category } from '@/types'
 
@@ -78,86 +78,115 @@ export function ProductFilters({
     filters.priceRange[1] !== maxPrice
 
   return (
-    <section className="panel sticky top-24 p-5">
-      <div className="mb-5 flex items-center justify-between">
+    <section className="glass-card sticky top-24 rounded-[1.8rem] p-5 md:p-6">
+      <div className="mb-5 flex items-center justify-between gap-2">
         <h2 className="inline-flex items-center gap-2 text-base font-semibold text-brand-text">
-          <SlidersHorizontal className="h-4 w-4 text-brand-accent" />
+          <SlidersHorizontal className="h-4 w-4 text-brand-text" />
           Filter
         </h2>
-        <span className="text-xs text-brand-text-muted">{productCount} Treffer</span>
+        <span className="rounded-full border border-brand-border bg-white px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-brand-text-muted">
+          {productCount} Treffer
+        </span>
       </div>
 
-      <div className="space-y-5">
-        <label className="block text-sm font-medium text-brand-text" htmlFor="sortBy">
-          Sortierung
-        </label>
-        <select
-          id="sortBy"
-          value={filters.sortBy}
-          onChange={(event) => setValue('sortBy', event.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-white px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none"
-        >
-          {SORT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
+      <div className="space-y-6">
         <div>
-          <p className="text-sm font-medium text-brand-text">Kategorien</p>
-          <div className="mt-2 space-y-2">
-            {categories.map((category) => (
-              <label key={category.id} className="flex cursor-pointer items-center gap-2 text-sm text-brand-text">
-                <input
-                  type="checkbox"
-                  checked={filters.categories.includes(category.id)}
-                  onChange={() => toggleCategory(category.id)}
-                  className="h-4 w-4 rounded border-brand-border text-brand-accent"
-                />
-                <span>{category.name}</span>
-              </label>
+          <label className="mb-2 block text-xs font-bold uppercase tracking-[0.1em] text-brand-text-muted" htmlFor="sortBy">
+            Sortierung
+          </label>
+          <select
+            id="sortBy"
+            value={filters.sortBy}
+            onChange={(event) => setValue('sortBy', event.target.value)}
+            className="w-full rounded-2xl border border-brand-border bg-white px-3 py-2.5 text-sm text-brand-text focus:border-black focus:outline-none"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
             ))}
+          </select>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.1em] text-brand-text-muted">Kategorien</p>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => {
+              const selected = filters.categories.includes(category.id)
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => toggleCategory(category.id)}
+                  aria-pressed={selected}
+                  className={[
+                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
+                    selected
+                      ? 'border-black bg-black text-white'
+                      : 'border-brand-border bg-white text-brand-text hover:border-black/30',
+                  ].join(' ')}
+                >
+                  {selected ? <Check className="h-3 w-3" /> : null}
+                  {category.name}
+                </button>
+              )
+            })}
           </div>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-brand-text">Preisbereich</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              min={minPrice}
-              max={filters.priceRange[1]}
-              value={filters.priceRange[0]}
-              onChange={(event) => setValue('priceRange', [Number(event.target.value), filters.priceRange[1]])}
-              className="rounded-xl border border-brand-border px-3 py-2 text-sm"
-            />
-            <input
-              type="number"
-              min={filters.priceRange[0]}
-              max={maxPrice}
-              value={filters.priceRange[1]}
-              onChange={(event) => setValue('priceRange', [filters.priceRange[0], Number(event.target.value)])}
-              className="rounded-xl border border-brand-border px-3 py-2 text-sm"
-            />
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.1em] text-brand-text-muted">Preisbereich</p>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block">
+              <span className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-brand-text-muted">Min</span>
+              <input
+                type="number"
+                min={minPrice}
+                max={filters.priceRange[1]}
+                value={filters.priceRange[0]}
+                onChange={(event) => setValue('priceRange', [Number(event.target.value), filters.priceRange[1]])}
+                className="w-full rounded-xl border border-brand-border bg-white px-3 py-2 text-sm text-brand-text focus:border-black focus:outline-none"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-brand-text-muted">Max</span>
+              <input
+                type="number"
+                min={filters.priceRange[0]}
+                max={maxPrice}
+                value={filters.priceRange[1]}
+                onChange={(event) => setValue('priceRange', [filters.priceRange[0], Number(event.target.value)])}
+                className="w-full rounded-xl border border-brand-border bg-white px-3 py-2 text-sm text-brand-text focus:border-black focus:outline-none"
+              />
+            </label>
           </div>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-brand-text">Verfügbarkeit</p>
-          <div className="mt-2 space-y-1 text-sm text-brand-text">
-            <label className="flex items-center gap-2">
-              <input type="radio" checked={filters.inStock === null} onChange={() => setValue('inStock', null)} />
-              Alle Produkte
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" checked={filters.inStock === true} onChange={() => setValue('inStock', true)} />
-              Auf Lager
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" checked={filters.inStock === false} onChange={() => setValue('inStock', false)} />
-              Nicht verfügbar
-            </label>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.1em] text-brand-text-muted">Verfuegbarkeit</p>
+          <div className="grid gap-2">
+            {[
+              { label: 'Alle Produkte', value: null as boolean | null },
+              { label: 'Auf Lager', value: true },
+              { label: 'Nicht verfugbar', value: false },
+            ].map((option) => {
+              const selected = filters.inStock === option.value
+              return (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => setValue('inStock', option.value)}
+                  className={[
+                    'rounded-xl border px-3 py-2 text-left text-sm font-medium transition-colors',
+                    selected
+                      ? 'border-black bg-black text-white'
+                      : 'border-brand-border bg-white text-brand-text hover:border-black/30',
+                  ].join(' ')}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -165,7 +194,7 @@ export function ProductFilters({
       {hasFilters ? (
         <div className="mt-6">
           <Button variant="outline" fullWidth onClick={clearFilters}>
-            Filter zurücksetzen
+            Filter zurucksetzen
           </Button>
         </div>
       ) : null}

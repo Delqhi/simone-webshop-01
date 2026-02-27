@@ -39,11 +39,11 @@ export function ProductGrid({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="panel-soft flex flex-col items-center justify-center px-6 py-12 text-center"
+        className="rounded-[1.8rem] border border-brand-border bg-white/85 px-6 py-14 text-center"
       >
-        <p className="text-xl font-semibold text-brand-text">{emptyMessage}</p>
-        <p className="mt-2 max-w-md text-sm text-brand-text-muted">
-          Prüfe Filter, Segment oder Suchbegriff. Alle Preise und Verfügbarkeiten werden transparent aktualisiert.
+        <p className="text-2xl font-semibold text-brand-text">{emptyMessage}</p>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-brand-text-muted">
+          Prufe Filter, Segment oder Suchbegriff. Alle Preise und Verfuegbarkeiten werden transparent aktualisiert.
         </p>
       </motion.div>
     )

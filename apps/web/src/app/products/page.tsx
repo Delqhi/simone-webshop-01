@@ -113,29 +113,53 @@ export default function ProductsPage() {
   return (
     <main className="shell-container py-10">
       <JsonLd id="products-item-list" data={productListJsonLd} />
-      <header className="mb-6">
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text-muted">{SEGMENT_LABELS[segment]}</p>
-        <h1 className="mt-1 text-4xl">Produkte mit klaren Kosten und Nutzen</h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-brand-text-muted">
+
+      <header className="mb-8 overflow-hidden rounded-[2rem] border border-brand-border bg-gradient-to-br from-stone-50 via-white to-stone-100 p-6 shadow-[0_20px_50px_rgba(10,10,10,0.08)] md:p-8">
+        <p className="section-eyebrow">{SEGMENT_LABELS[segment]}</p>
+        <h1 className="mt-2 text-4xl md:text-5xl">Produkte mit klaren Kosten und Nutzen</h1>
+        <p className="mt-4 max-w-3xl text-base leading-7 text-brand-text-muted">
           {segment === 'b2b'
-            ? 'Filtere nach Verfügbarkeit, Preisrahmen und Kategorien, um wiederkehrende Beschaffung effizient zu planen.'
-            : 'Finde schnell passende Produkte mit transparenter Preis- und Lieferkommunikation ohne unnötige Hürden.'}
+            ? 'Filtere nach Verfuegbarkeit, Preisrahmen und Kategorien, um wiederkehrende Beschaffung effizient zu planen.'
+            : 'Finde schnell passende Produkte mit transparenter Preis- und Lieferkommunikation ohne unnoetige Huerden.'}
         </p>
+
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSegment('b2c')}
+            className={[
+              'rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
+              segment === 'b2c' ? 'border-black bg-black text-white' : 'border-brand-border bg-white text-brand-text',
+            ].join(' ')}
+          >
+            Privatkunden
+          </button>
+          <button
+            type="button"
+            onClick={() => setSegment('b2b')}
+            className={[
+              'rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
+              segment === 'b2b' ? 'border-black bg-black text-white' : 'border-brand-border bg-white text-brand-text',
+            ].join(' ')}
+          >
+            Unternehmen
+          </button>
+        </div>
       </header>
 
       <TrustInlineBar signals={PRIMARY_TRUST_SIGNALS} className="mb-6" />
 
-      <div className="mb-6 max-w-xl">
+      <div className="mb-6 rounded-[1.5rem] border border-brand-border bg-white/80 p-4 md:max-w-xl">
         <Input
           label="Produktsuche"
-          placeholder="z. B. Kopfhörer, Smartwatch, Yoga"
+          placeholder="z. B. Kopfhoerer, Smartwatch, Yoga"
           value={filters.search}
           onChange={(event) => setFilters({ ...filters, search: event.target.value })}
           leftIcon={<Search className="h-4 w-4" />}
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
         <ProductFilters
           categories={categories}
           filters={filters}
@@ -146,7 +170,12 @@ export default function ProductsPage() {
         />
 
         <section>
-          <ProductGrid products={filteredProducts} loading={loading} columns={3} emptyMessage="Keine passenden Produkte gefunden." />
+          <ProductGrid
+            products={filteredProducts}
+            loading={loading}
+            columns={3}
+            emptyMessage="Keine passenden Produkte gefunden."
+          />
         </section>
       </div>
     </main>

@@ -15,7 +15,7 @@ export function CheckoutCancelledNotice({
   return (
     <section className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-4">
       <p className="text-sm font-semibold text-amber-900">Zahlung abgebrochen, deine Bestellung wurde noch nicht abgeschlossen.</p>
-      <p className="mt-1 text-sm text-amber-800">Du kannst jetzt direkt erneut zahlen oder zuerst deinen Warenkorb prüfen.</p>
+      <p className="mt-1 text-sm text-amber-800">Du kannst jetzt direkt erneut zahlen oder zuerst deinen Warenkorb pruefen.</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {retryCheckoutURL ? (
           <a href={retryCheckoutURL}>
@@ -23,12 +23,12 @@ export function CheckoutCancelledNotice({
           </a>
         ) : (
           <Button size="sm" onClick={onRetryReview}>
-            Erneut zur Zahlungsprüfung
+            Erneut zur Zahlungsprufung
           </Button>
         )}
         <Link href="/cart">
           <Button size="sm" variant="outline">
-            Warenkorb prüfen
+            Warenkorb pruefen
           </Button>
         </Link>
         <Link href="/kontakt" onClick={onSupportClick}>

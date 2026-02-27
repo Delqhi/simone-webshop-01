@@ -16,7 +16,7 @@ type PromotionBannerStripProps = {
   className?: string
 }
 
-const FALLBACK_COLOR = '#1f8c72'
+const FALLBACK_COLOR = '#101010'
 
 function safeColor(input: string | null | undefined): string {
   const color = (input || '').trim()
@@ -37,15 +37,16 @@ export function PromotionBannerStrip({
   }
 
   const badge = promo.code ? `Code: ${promo.code}` : 'Aktive Aktion'
+  const accent = safeColor(promo.bannerColor)
   const style = {
-    borderColor: safeColor(promo.bannerColor),
-    backgroundColor: `${safeColor(promo.bannerColor)}1A`,
+    borderColor: `${accent}44`,
+    backgroundColor: `${accent}14`,
   }
 
   if (variant === 'header') {
     return (
       <div className={className} style={style}>
-        <div className="shell-container flex min-h-[2.25rem] items-center justify-between gap-3 text-xs font-medium text-brand-text">
+        <div className="shell-container flex min-h-[2.4rem] items-center justify-between gap-3 text-xs font-medium text-brand-text">
           <p className="truncate">{promo.bannerText}</p>
           <span className="inline-flex flex-none items-center gap-1 rounded-full border border-current px-2 py-0.5">
             <Tag className="h-3 w-3" />
@@ -58,7 +59,7 @@ export function PromotionBannerStrip({
 
   return (
     <Link href="/products" className={className}>
-      <article className="rounded-xl border px-3 py-2 text-sm text-brand-text transition-colors hover:brightness-[0.98]" style={style}>
+      <article className="rounded-2xl border px-4 py-3 text-sm text-brand-text transition-colors hover:brightness-[0.98]" style={style}>
         <p className="font-semibold">{promo.bannerText}</p>
         <p className="mt-1 text-xs text-brand-text-muted">{badge}</p>
       </article>

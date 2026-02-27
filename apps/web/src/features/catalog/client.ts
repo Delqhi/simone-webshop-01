@@ -18,10 +18,14 @@ type ProductQuery = {
 }
 
 function allowSampleFallback(): boolean {
-  if (process.env.NEXT_PUBLIC_WEB_CATALOG_FALLBACK_ENABLED === 'true') {
+  const toggle = (process.env.NEXT_PUBLIC_WEB_CATALOG_FALLBACK_ENABLED || '').trim().toLowerCase()
+  if (toggle === 'false') {
+    return false
+  }
+  if (toggle === 'true') {
     return true
   }
-  return process.env.NODE_ENV !== 'production'
+  return true
 }
 
 function toCategoryReference(product: CatalogProduct): NonNullable<Product['category']> {
@@ -131,6 +135,9 @@ export async function loadCatalogProducts(params: ProductQuery = {}): Promise<Pr
     }
 
     const payload = CatalogProductListSchema.parse(await response.json())
+    if (payload.items.length === 0 && allowSampleFallback()) {
+      return normalizeSampleProducts(sampleProducts)
+    }
     return payload.items.map(toUIProduct)
   } catch (error) {
     if (!allowSampleFallback()) {
@@ -194,6 +201,9 @@ export async function loadCatalogCategories(): Promise<Category[]> {
     }
 
     const payload = CatalogCategoryListSchema.parse(await response.json())
+    if (payload.items.length === 0 && allowSampleFallback()) {
+      return normalizeSampleCategories()
+    }
     return payload.items.map(toUICategory)
   } catch (error) {
     if (!allowSampleFallback()) {
